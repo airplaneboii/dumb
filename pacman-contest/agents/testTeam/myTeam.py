@@ -5,6 +5,7 @@ import util
 from captureAgents import CaptureAgent
 from game import Directions
 from util import nearestPoint
+import time
 
 
 #################
@@ -12,7 +13,7 @@ from util import nearestPoint
 #################
 
 def create_team(first_index, second_index, is_red,
-                first='OffensiveReflexAgent', second='DefensiveReflexAgent', num_training=0):
+                first='MyAgent', second='OffensiveReflexAgent', num_training=0):
     """
     This function should return a list of two agents that will form the
     team, initialized using firstIndex and secondIndex as their agent
@@ -174,3 +175,27 @@ class DefensiveReflexAgent(ReflexCaptureAgent):
 
     def get_weights(self, game_state, action):
         return {'num_invaders': -1000, 'on_defense': 100, 'invader_distance': -10, 'stop': -100, 'reverse': -2}
+
+
+class MyAgent(ReflexCaptureAgent):
+
+    def get_features(self, game_state, action):
+        time.sleep(0.1)
+        print("game state:")
+        print(game_state)
+        print(action)
+        features = util.Counter()
+        successor = self.get_successor(game_state, action)
+        food_list = self.get_food(successor).as_list()
+        features['successor_score'] = -len(food_list)  # self.getScore(successor)
+
+        # Compute distance to the nearest food
+
+        if len(food_list) > 0:  # This should always be True,  but better safe than sorry
+            my_pos = successor.get_agent_state(self.index).get_position()
+            min_distance = min([self.get_maze_distance(my_pos, food) for food in food_list])
+            features['distance_to_food'] = min_distance
+        return features
+
+    def get_weights(self, game_state, action):
+        return {'successor_score': 100, 'distance_to_food': -1}
