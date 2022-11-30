@@ -7,6 +7,8 @@ from game import Directions
 from util import nearestPoint
 import time
 
+from helper import *
+
 
 #################
 # Team creation #
