@@ -44,8 +44,6 @@ def test2():
     (2, 5):  [(2, 4),1] ->  [(1, 5),1] -> None
     '''
 
-def test3():
-    pass
 
 # will be used ...
 '''%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -65,4 +63,16 @@ def test3():
 %3%.%.%     %       %.%.% .%   %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'''
 
-test2()
+def test3():
+    layout = ["%%%%%%%%%%%%",
+            "%        24%",
+            "%      %%%%%",
+            "%%%%%      %",
+            "%13     o  %",
+            "%%%%%%%%%%%%"]
+    graph = generate_graph_from_layout(layout)
+    print(graph)
+
+    print(graph.get_nodes()[3])
+
+test3()

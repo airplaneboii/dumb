@@ -19,6 +19,9 @@ class Node:
             self.neighbors.append((neighbor, weight))
             return True     # operation was successful
         return False
+    
+    def get_value(self):
+        return self.value
 
     # output: value: [edge1,weight1] -> [edge2,weight2] -> ... -> None
     def __str__(self):
@@ -52,25 +55,23 @@ class Graph:
     
     def find_node(self, value):
         for node in self.nodes:
+            #print(str(node.value) + "; " + str(value))
             if node.value == value:
                 return node
         return None
 
     def add_edge(self, value1, value2, weight=1):
-        #print("Hoho")
         #print(len(self.nodes))
         node1 = self.find_node(value1)
         node2 = self.find_node(value2)
-        #print(str(node1))
-        #print(str(node2))
 
         if (node1 is not None) and (node2 is not None):
             #print("Not none :)")
-            print(weight)
+            #print(weight)
             node1.add_neighbor(node2, weight)
             node2.add_neighbor(node1, weight)
         else:   # not good
-            print("Node(s) not found :(" + str(value1) + ", " + str(value2))
+            print("Node(s) not found:\t" + str(value1) + ", " + str(value2))
     
     def number_of_nodes(self):
         return len(self.nodes)
@@ -84,6 +85,9 @@ class Graph:
                 return True
         return False
     
+    def get_nodes(self):
+        return self.nodes
+    
     # vertices vertically
     def __str__(self):
         string = ""
@@ -93,4 +97,42 @@ class Graph:
         return string
     
     # some additional methods need to be found
+
+
+''' testCapture.lay
+%%%%%%%%%%%%
+%        24%
+%      %%%%%
+%%%%%      %
+%13     o  %
+%%%%%%%%%%%%
+'''
+def generate_graph_from_layout(layout):
+    nodes = []
+    for i in range(len(layout)):
+        for j in range(len(layout[i])):
+            coordinates = (i,j)
+            if (layout[i][j] != "%"):
+                nodes.append(Node(coordinates))
     
+    graph = Graph(nodes)
+
+    #for n in graph.get_nodes():
+    #    print(n)
+
+    for node in graph.get_nodes():
+        coordinates = node.get_value()
+        # check if neighbors right or down exist - if exist add connection
+        # right
+        coordinatesN = (coordinates[0], coordinates[1]+1)
+        nodeN = graph.find_node(coordinatesN)
+        if nodeN is not None:
+            graph.add_edge(coordinates, coordinatesN)
+        # down
+        coordinatesN = (coordinates[0]+1, coordinates[1])
+        #print(coordinatesN)
+        nodeN = graph.find_node(coordinatesN)
+        if nodeN is not None:
+            graph.add_edge(coordinates, coordinatesN)
+    
+    return graph
