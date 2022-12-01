@@ -2,15 +2,6 @@ from helper import *
 
 # used for testing helper.py file (functions, classes ...)
 
-def test1():
-    node1 = Node((3,3))
-    node2 = Node((5, 56, 'a'))
-    #print(node1.value)
-    node1.add_neighbor(node2)
-    node2.add_neighbor(node1)
-    print(str(node1))
-    print(str(node2))
-
 
 def test2():
     ''' Graph with structure (similr structure will be used)
@@ -18,31 +9,20 @@ def test2():
             |   |
             x - x
     '''
-    node1 = Node((1,4))
-    #print("node1:" + str(node1))
-    node2 = Node((1,5))
-    node3 = Node((2,4))
-    node4 = Node((2,5))
+    values = [(1,4), (1,5), (2,4), (2,5)]
+    nodes = [Node(value) for value in values]
 
-    graph = Graph([node1, node2, node3, node4])
-    graph.add_edge((1,4), (1,5), 7)
-    graph.add_edge((2,4), (2,5))
-    graph.add_edge((1,4), (2,4))
-    graph.add_edge((1,5), (2,5))
+    graph = Graph(values)
+    graph.add_edge(values[0], values[1], 7)
+    graph.add_edge(values[2], values[3])
+    graph.add_edge(values[0], values[2])
+    graph.add_edge(values[1], values[3])
 
-    print("node1: " + str(node1))
-    print("node2: " + str(node2))
-    print("node3: " + str(node3))
-    print("node4: " + str(node4))
+    print("node1: " + str(nodes[0]))
+
 
     print(str(graph))
 
-    '''
-    (1, 4):  [(1, 5),7] ->  [(2, 4),1] -> None
-    (1, 5):  [(1, 4),1] ->  [(2, 5),1] -> None
-    (2, 4):  [(2, 5),1] ->  [(1, 4),1] -> None
-    (2, 5):  [(2, 4),1] ->  [(1, 5),1] -> None
-    '''
 
 
 # will be used ...
@@ -74,5 +54,44 @@ def test3():
     print(graph)
 
     print(graph.get_nodes()[3])
+    #print(type(graph) == Graph)
+    
+def test4():
+    l1 = [3,5]
+    n1 = Node(l1)
+    n2 = n1.get_copy()
+    l1[0] = 7
+    print(n1)
+    print(n2)
 
-test3()
+def test5():
+    values = [(i//3+1, i%3+1) for i in range(9)]
+    #print(values)
+
+    graph = Graph(values)
+    for i in range(1,4):
+        for j in range(1,4):
+            if (i < 3):
+                graph.add_edge((i,j), (i+1,j))
+            if (j < 3):
+                graph.add_edge((i,j), (i,j+1))
+    #print(graph)
+
+    graph2 = graph.get_subgraph([(1,1)])
+    #print(graph2)
+    graph2.clean()
+    #print(graph2)
+
+    graph3 = expand_subgraph(graph, expand_subgraph(graph, graph2))
+    print(graph3)
+    graph3.clean()
+    print(graph3)
+
+    #print(type(graph.get_nodes()) == list)
+
+    '''graph4 = graph.get_subgraph([(1,1), (1,2), (2,2)])
+
+    print(graph4)'''
+            
+
+test5()

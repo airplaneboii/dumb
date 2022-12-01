@@ -1,57 +1,65 @@
+import copy
+
 class Node:
-    # value in form (i, j)
-    def __init__(self, value, neighbors=None):
+    # type(labels)  
+    def __init__(self, value, labels=None):
         self.value = value
-        if neighbors is None:
-            self.neighbors = []
+        if labels is None:
+            self.labels = {}
         else:
-            self.neighbors = neighbors
-    
-    def has_neighbors(self):
-        return len(self.neighbors) != 0
-    
-    def number_of_neighbors(self):
-        return len(self.neighbors)
-    
-    # edge: (value, weight), edges list of edges
-    def add_neighbor(self, neighbor, weight=1):
-        if neighbor not in self.neighbors:
-            self.neighbors.append((neighbor, weight))
-            return True     # operation was successful
-        return False
+            assert type(labels) == dict, "Labels should be dictionary"
+            self.labels = labels
     
     def get_value(self):
         return self.value
 
-    # output: value: [edge1,weight1] -> [edge2,weight2] -> ... -> None
+    def get_copy(self):
+        return copy.deepcopy(self)
+    
+    def get_labels(self):
+        return self.labels
+    
+    def get_label(self, key):
+        assert key in self.labels.keys()
+        return self.labels[key]
+
+    def set_label(self, key, value):
+        self.labels[key] = value
+    
     def __str__(self):
-        #print("Node\t", str(self.value))
-        string = str(self.value) + ": "
-        for neighbor in self.neighbors:
-            #print(neighbor[0].value)
-            string += " [" + str(neighbor[0].value) + "," + str(neighbor[1]) + "] -> "
-        return string + "None"
+        string = str(self.value)
+        return string
     
     
 
-# field representation
+# for field representation
 class Graph:
-    def __init__(self, nodes=None):
-        if nodes is None:
+    def __init__(self, values=None):
+        if values is None:
             self.nodes = []
+            # edges: [ [value1,weight1], [value2,weight2], ...]
+            self.edges = {}
         else:
-            self.nodes = nodes
+            self.nodes = []
+            self.edges = {}
+            for i in range(len(values)):
+                node = Node(values[i])
+                self.nodes.append(node)
+                self.edges[values[i]] = []
     
     # node wasn't created yet
-    def add_new_node(self, value, neighbors=None):
-        if neighbors is not None:
-            self.nodes.append(Node(value, neighbors))
-        else:
+    def add_new_node(self, value, labels=None):
+        assert value not in [node.value for node in self.nodes], "Already exists"
+        if labels is None:
             self.nodes.append(Node(value))
+            self.edges[value] = []
+        else:
+            self.nodes.append(Node(value, labels))
+            self.edges[value] = []
 
     # node was created before (may not be needed)
-    def add_node(self, node):
-        self.nodes.append(node)
+    #def add_node(self, node):
+    #    self.nodes.append(node)
     
     def find_node(self, value):
         for node in self.nodes:
@@ -59,6 +67,10 @@ class Graph:
             if node.value == value:
                 return node
         return None
+    
+    # possible directed graphs
+    def add_neighbor(self, value1, value2, weight=1):
+        self.edges[value1].append([value2, weight])
 
     def add_edge(self, value1, value2, weight=1):
         #print(len(self.nodes))
@@ -68,32 +80,96 @@ class Graph:
         if (node1 is not None) and (node2 is not None):
             #print("Not none :)")
             #print(weight)
-            node1.add_neighbor(node2, weight)
-            node2.add_neighbor(node1, weight)
+            self.add_neighbor(value1, value2, weight)
+            self.add_neighbor(value2, value1, weight)
         else:   # not good
             print("Node(s) not found:\t" + str(value1) + ", " + str(value2))
+    
+    def add_edges(self, value, edges):
+        assert value in [node.value for node in self.nodes], str(value) + " doesn't exist"
+        for edge in edges:
+            if not edge in self.edges[value]:
+                self.edges[value].append(edge)
+        #self.edges[value] += edges
+
     
     def number_of_nodes(self):
         return len(self.nodes)
     
     def are_connected(self, value1, value2):
-        node1 = self.find_node(value1)
-        node2 = self.find_node(value2)
-
-        for neighbor in node1.neighbors:
-            if neighbor[0].value == node2.value:
-                return True
-        return False
+        #node1 = self.find_node(value1)
+        #node2 = self.find_node(value2)
+        return value2 in [pos[0] for pos in self.edges[value1]]     # pos[1] is weight
     
     def get_nodes(self):
         return self.nodes
+    
+    def get_copy(self):
+        return copy.deepcopy(self)
+    
+    # includes non-existing edges in subgraph
+    def get_subgraph(self, nValues):
+        values = [node.value for node in self.nodes]
+        assert type(nValues) == list, "Nodes should be list"
+        assert set(nValues) <= set(values), "Not a subset"
+
+        '''values = []
+        #print(nValues)
+        for node in self.nodes:
+            #print(node)
+            if node.get_value() in nValues:
+                values.append(node)
+                print(node)'''
+        
+        g = Graph()
+        for value in nValues:
+            #print(value)
+            #print(value in self.edges.keys())
+            #print(self.edges[value])
+            g.add_new_node(value)
+            g.add_edges(value, self.edges[value])  # add all extra edges
+        
+        return g
+
+
+    # remove edges if nodes doesn't exist in graph
+    '''def clean(self):
+        values = [node.value for node in self.nodes]
+        newNodes = copy.deepcopy(self.nodes)
+        #print(values)
+        for node in self.nodes:
+            i = 0
+            while i < len(self.edges[node.value]):
+                neighbors = node.get_neighbors()
+                nValues = [n[0].value for n in neighbors]
+                #print(nValues)
+                if not nValues[i] in values:
+                    neighbors.remove(neighbors[i])
+                    i -= 1
+                i += 1
+                neighbors = [e.get_value() for e in self.edges[node.value]]
+                if not neighbors[i] in values:
+                    newNodes.remove(neighbors[i])
+                    i -= 1
+                i += 1'''
+    
+    def clean(self):
+
+        # for each node and each edge check if connection exists
+        values = [node.value for node in self.nodes]
+        #print(values)
+        
+        for value in values:
+            edges = self.edges[value]
+
+            self.edges[value] = list(filter(lambda v: v[0] in values, edges))
+
     
     # vertices vertically
     def __str__(self):
         string = ""
         for node in self.nodes:
-            #print("N", str(node))
-            string += str(node) + "\n"
+            string += str(node) + ": " + str(self.edges[node.value]) + "\n"
         return string
     
     # some additional methods need to be found
@@ -115,7 +191,7 @@ def generate_graph_from_layout(layout):
             if (layout[i][j] != "%"):
                 nodes.append(Node(coordinates))
     
-    graph = Graph(nodes)
+    graph = Graph([n.get_value() for n in nodes])
 
     #for n in graph.get_nodes():
     #    print(n)
@@ -136,3 +212,37 @@ def generate_graph_from_layout(layout):
             graph.add_edge(coordinates, coordinatesN)
     
     return graph
+
+# ex. for finding number of coins in neighborhood
+# expand subgraph with connected vertices to subgraph
+def expand_subgraph(graph, subgraph):
+    assert type(graph) == Graph, "Wrong type" 
+    assert type(subgraph) == Graph, "Wrong type"    # should be right type
+    
+    '''existingNodes = subgraph.get_nodes()
+    newGraph = subgraph.get_copy()
+    for node in existingNodes:
+        for neighbor in node.get_neighbors():
+            if not neighbor in newGraph.get_nodes():
+                newGraph.add_node(neighbor[0])'''
+    values = [node.get_value() for node in graph.get_nodes()]
+    sValues = [node.get_value() for node in subgraph.get_nodes()]
+    newGraph = subgraph.get_copy()
+
+    for value in sValues:
+        #print(value)
+        edges = graph.edges[value]
+        newGraph.add_edges(value, edges)
+    
+    #print(newGraph)
+
+    for value in values:
+        for sValue in sValues:
+            edges = [edge[0] for edge in graph.edges[sValue]]
+            if value in edges and not value in sValues:
+                #print(graph.edges[value])
+                newGraph.add_new_node(value)
+                newGraph.add_edges(value, graph.edges[value])
+                break
+
+    return newGraph
