@@ -94,4 +94,34 @@ def test5():
     print(graph4)'''
             
 
-test5()
+def test6():
+    layout = ["%%%%%%%%%%%%",
+            "%        24%",
+            "%      %%%%%",
+            "%%%%%      %",
+            "%13     o  %",
+            "%%%%%%%%%%%%"]
+    graph1 = generate_graph_from_layout(layout)
+    print(graph1)
+    graph2 = generate_graph_from_layout(layout, True)
+    print(graph2)
+
+def test7():
+    layout = ["%%%%%%%%%%%%",
+            "%        24%",
+            "%      %%%%%",
+            "%%%%%      %",
+            "%13     o  %",
+            "%%%%%%%%%%%%"]
+
+    graph = generate_graph_from_layout(layout, True)
+    print(graph)
+
+    graph2 = graph.get_subgraph([(2,4), (2,5)])
+    graph2 = expand_subgraph(graph, expand_subgraph(graph, graph2))
+    print(graph2)
+    visualize(layout, graph2)
+
+
+
+test7()

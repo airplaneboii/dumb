@@ -111,7 +111,8 @@ class Graph:
     def get_subgraph(self, nValues):
         values = [node.value for node in self.nodes]
         assert type(nValues) == list, "Nodes should be list"
-        assert set(nValues) <= set(values), "Not a subset"
+        #assert set(nValues) <= set(values), "Not a subset"
+        nValues = set(nValues).intersection(set(values))
 
         '''values = []
         #print(nValues)
@@ -183,13 +184,16 @@ class Graph:
 %13     o  %
 %%%%%%%%%%%%
 '''
-def generate_graph_from_layout(layout):
+def generate_graph_from_layout(layout, reverse=False):
     nodes = []
     for i in range(len(layout)):
         for j in range(len(layout[i])):
             coordinates = (i,j)
             if (layout[i][j] != "%"):
-                nodes.append(Node(coordinates))
+                if (reverse):
+                    nodes.append(Node((len(layout)-i-1,j)))
+                else:
+                    nodes.append(Node(coordinates))
     
     graph = Graph([n.get_value() for n in nodes])
 
@@ -246,3 +250,21 @@ def expand_subgraph(graph, subgraph):
                 break
 
     return newGraph
+
+def visualize(layout, graph):
+    nodes = graph.get_nodes()
+    #print(graph)
+    #print([node.get_value() for node in nodes])
+    out = ""
+    for i in range(len(layout)):
+        for j in range(len(layout[i])):
+            if (layout[i][j] == "%"):
+                #print("%", end="")
+                out += "%"
+            elif (len(layout)-i-1,j) in [node.get_value() for node in nodes]:
+                out += "x"
+            else:
+                #print(layout[i][j], end="")
+                out += layout[i][j]
+        out += "\n"
+    print(out)
