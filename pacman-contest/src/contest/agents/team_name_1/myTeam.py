@@ -81,7 +81,12 @@ class DumbAgent(CaptureAgent):
         #print(self.get_score(game_state), len(self.get_food(game_state).as_list()), abs(self.get_score(game_state) + len(self.get_food(game_state).as_list())))
         #if abs(self.get_score(game_state) - len(self.get_food(game_state).as_list())) > 5:
         #    print("going home")
-        print(self.agent_state.num_carrying)
+        #print(self.agent_state.num_carrying)
+
+        agent = game_state.data.agent_states[self.index] # usefull
+        numCarrying = agent.num_carrying
+        print(numCarrying)
+
         
         f = [a for a in self.get_food(game_state).as_list()]
         fd = [self.get_maze_distance(game_state.get_agent_state(self.index).get_position(), a) for a in f]
