@@ -8,6 +8,8 @@ from util import nearestPoint
 import time
 
 from helper import *
+from clustering.clustering_algorithm import *
+from matplotlib import pyplot as plt
 
 
 #################
@@ -15,7 +17,7 @@ from helper import *
 #################
 
 def create_team(first_index, second_index, is_red,
-                first='MyAgent', second='OffensiveReflexAgent', num_training=0):
+                first='MyAgent', second='DefensiveReflexAgent', num_training=0):
     """
     This function should return a list of two agents that will form the
     team, initialized using firstIndex and secondIndex as their agent
@@ -182,24 +184,104 @@ class DefensiveReflexAgent(ReflexCaptureAgent):
 class MyAgent(ReflexCaptureAgent):
 
     def get_features(self, game_state, action):
-        time.sleep(0.1)
-        print("game state:")
-        print(game_state)
-        print(action)
+        time.sleep(0.3)
+        #print("game state:")
+        #print(game_state)
+        #print(action)
         features = util.Counter()
         successor = self.get_successor(game_state, action)
         food_list = self.get_food(successor).as_list()
-        print(food_list)
+        #print(food_list)
         features['successor_score'] = -len(food_list)  # self.getScore(successor)
 
         # Compute distance to the nearest food
 
         if len(food_list) > 0:  # This should always be True,  but better safe than sorry
             my_pos = successor.get_agent_state(self.index).get_position()
-            print(my_pos)
+            #print(my_pos)
             min_distance = min([self.get_maze_distance(my_pos, food) for food in food_list])
             features['distance_to_food'] = min_distance
         return features
+
+    def choose_action(self, game_state):
+        actions = game_state.get_legal_actions(self.index)
+
+        # You can profile your evaluation time by uncommenting these lines
+        start = time.time()
+        values = [self.evaluate(game_state, a) for a in actions]
+        # print 'eval time for agent %d: %.4f' % (self.index, time.time() - start)
+
+        max_value = max(values)
+        best_actions = [a for a, v in zip(actions, values) if v == max_value]
+
+        #print(game_state)
+        game_str = str(game_state).splitlines()
+        #for i in range(len(game_str)):
+        #    print(game_str[i])
+        graph = generate_graph_from_layout(game_str, True)
+        #print(graph)
+
+        food = self.get_food(game_state).as_list()
+
+        print(food)
+        print(food[1])
+        print(food[2])
+        print(self.get_maze_distance(food[1], food[2]))
+        food_left = len(food)
+        #print(food)
+        succ = self.get_successor(game_state, actions[0])
+        #print(succ.get_agent_position(self.index))
+
+        dataset = food
+        K = 9
+        M = lambda x1,x2: self.get_maze_distance(x1, x2)
+        print(type(M))
+        print(M(food[1], food[2]))
+
+        agg_hierarchical_clustering = AgglomerativeHierarchicalClustering(dataset, K, M)
+        agg_hierarchical_clustering.run_algorithm()
+        agg_hierarchical_clustering.print()
+
+        #plt.plot([var[0] for var in dataset], [var[1] for var in dataset], 'ro')
+        #plt.show()
+        print(len(agg_hierarchical_clustering.clusters.items()))
+        print(agg_hierarchical_clustering.clusters[0])
+
+        colors = ["b", "c", "g", "k", "m", "r", "y"]
+        markers = ["o", "s"]
+        for i in range(K):
+            cluster = agg_hierarchical_clustering.clusters[i]
+            plt.plot([var[0] for var in cluster], [var[1] for var in cluster], colors[i%len(colors)] + markers[i%len(markers)])
+        plt.xlim([0, max([var[0] for var in dataset])+2])
+        plt.ylim([0, max([var[1] for var in dataset])+2])
+        plt.show()
+
+
+
+
+
+
+
+
+
+
+
+
+        if food_left <= 2:
+            best_dist = 9999
+            best_action = None
+            for action in actions:
+                successor = self.get_successor(game_state, action)
+                pos2 = successor.get_agent_position(self.index)
+                dist = self.get_maze_distance(self.start, pos2)
+                if dist < best_dist:
+                    best_action = action
+                    best_dist = dist
+            return best_action
+
+        print(time.time() - start)
+
+        return random.choice(best_actions)
 
     def get_weights(self, game_state, action):
         return {'successor_score': 100, 'distance_to_food': -1}

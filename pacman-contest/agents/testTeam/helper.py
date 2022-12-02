@@ -1,4 +1,5 @@
 import copy
+import numpy as np
 
 class Node:
     # type(labels)  
@@ -186,12 +187,12 @@ class Graph:
 '''
 def generate_graph_from_layout(layout, reverse=False):
     nodes = []
-    for i in range(len(layout)):
+    for i in range(len(layout)-1):
         for j in range(len(layout[i])):
             coordinates = (i,j)
             if (layout[i][j] != "%"):
                 if (reverse):
-                    nodes.append(Node((len(layout)-i-1,j)))
+                    nodes.append(Node((j,len(layout)-i-2)))
                 else:
                     nodes.append(Node(coordinates))
     
@@ -202,6 +203,7 @@ def generate_graph_from_layout(layout, reverse=False):
 
     for node in graph.get_nodes():
         coordinates = node.get_value()
+        #print(coordinates)
         # check if neighbors right or down exist - if exist add connection
         # right
         coordinatesN = (coordinates[0], coordinates[1]+1)

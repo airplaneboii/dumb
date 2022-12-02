@@ -119,8 +119,8 @@ def test7():
 
     graph2 = graph.get_subgraph([(2,4), (2,5)])
     graph2 = expand_subgraph(graph, expand_subgraph(graph, graph2))
-    print(graph2)
-    visualize(layout, graph2)
+    #print(graph2)
+    #visualize(layout, graph2)
 
 
 
