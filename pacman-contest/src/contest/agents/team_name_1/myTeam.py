@@ -107,22 +107,30 @@ class DumbAgent(CaptureAgent):
 
         food_left = len(self.get_food(game_state).as_list())
         retreat = False
-        if food_left <= 2:
+
+        #print(self.get_successor(game_state, random.choice(best_actions)).get_agent_state(self).is_pacman())
+        #print(type(self))
+        
+        if numCarrying >= 1:
             retreat = True
-        #elif self.get_successor(game_state, action).get_agent_state(self).is_pacman(): # correct this part -> preveri, ce je napadalec
-        #    succ = self.get_successor(game_state, action)
-#
-        #    # compute distance to opponents ghosts (if they are close)
-        #    enemies = [successor.get_agent_state(i) for i in self.get_opponents(successor)]
-        #    ghosts = [a for a in enemies if not a.is_pacman and a.get_position() is not None]
-        #    if len(ghosts > 0):
-        #        retreat = True
-        #    if numCarrying >= 5:
-        #        retreat = True
+            print("retreat")
+        if retreat and type(self) == StarvingPaccy: # correct this part -> preveri, ce je napadalec
+            print("we eat?")
+            #action = random.choice(best_actions)
+            #succ = self.get_successor(game_state, action)
+            #print(game_state)
+
+            # compute distance to opponents ghosts (if they are close)
+            enemies = [game_state.get_agent_state(i) for i in self.get_opponents(game_state)]
+            ghosts = [a for a in enemies if not a.is_pacman and a.get_position() is not None]
+            if len(ghosts) == 0:
+                print("they're not close")
+                retreat = False
+
             
 
         # Ko zmanjka hrane, se umakni na varno
-        if retreat:
+        if retreat or food_left <= 2:
             best_dist = 9999
             best_action = None
             for action in actions:
