@@ -34,7 +34,7 @@ import time
 #################
 
 def create_team(first_index, second_index, is_red,
-                first='StarvingPaccy', second='StarvingPaccy', num_training=0):
+                first='StarvingPaccy', second='LittleGhostie', num_training=0):
     """
     This function should return a list of two agents that will form the
     team, initialized using firstIndex and secondIndex as their agent
@@ -85,7 +85,8 @@ class DumbAgent(CaptureAgent):
 
         agent = game_state.data.agent_states[self.index] # usefull
         numCarrying = agent.num_carrying
-        print(numCarrying)
+        #enemy = self.get_opponents(game_state)
+        #print(numCarrying, enemy[0], enemy[1])
 
         
         f = [a for a in self.get_food(game_state).as_list()]
@@ -105,9 +106,23 @@ class DumbAgent(CaptureAgent):
         #print(self.get_capsules(game_state))
 
         food_left = len(self.get_food(game_state).as_list())
+        retreat = False
+        if food_left <= 2:
+            retreat = True
+        #elif self.get_successor(game_state, action).get_agent_state(self).is_pacman(): # correct this part -> preveri, ce je napadalec
+        #    succ = self.get_successor(game_state, action)
+#
+        #    # compute distance to opponents ghosts (if they are close)
+        #    enemies = [successor.get_agent_state(i) for i in self.get_opponents(successor)]
+        #    ghosts = [a for a in enemies if not a.is_pacman and a.get_position() is not None]
+        #    if len(ghosts > 0):
+        #        retreat = True
+        #    if numCarrying >= 5:
+        #        retreat = True
+            
 
         # Ko zmanjka hrane, se umakni na varno
-        if food_left <= 10:
+        if retreat:
             best_dist = 9999
             best_action = None
             for action in actions:
@@ -167,8 +182,16 @@ class StarvingPaccy(DumbAgent):
         #print(food_list)
         features['successor_score'] = -len(food_list)  # self.getScore(successor)
 
-        # Compute distance to the nearest food
+        # compute distance to opponents ghosts (if they are close)
+        enemies = [successor.get_agent_state(i) for i in self.get_opponents(successor)]
+        ghosts = [a for a in enemies if not a.is_pacman and a.get_position() is not None]
+        features['num_ghosts'] = len(ghosts)
+        #for i in ghosts:
+        #    print(i.get_position())
+        ghost_distances = [self.get_maze_distance(successor.get_agent_state(self.index).get_position(), a.get_position()) for a in ghosts]
+        #print(features['num_ghosts'], ghost_distances)
 
+        # Compute distance to the nearest food
         if len(food_list) > 0:  # This should always be True,  but better safe than sorry
             my_pos = successor.get_agent_state(self.index).get_position()
             min_distance = min([self.get_maze_distance(my_pos, food) for food in food_list])
@@ -181,7 +204,6 @@ class StarvingPaccy(DumbAgent):
 class LittleGhostie(DumbAgent):
     def get_features(self, game_state, action):
         features = util.Counter()
-        #print(action)
         successor = self.get_successor(game_state, action)
 
         my_state = successor.get_agent_state(self.index)
