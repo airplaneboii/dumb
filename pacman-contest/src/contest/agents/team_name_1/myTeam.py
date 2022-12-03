@@ -130,7 +130,7 @@ class DumbAgent(CaptureAgent):
             
 
         # Ko zmanjka hrane, se umakni na varno
-        if retreat or food_left <= 2:
+        if retreat or (food_left <= 2 and type(self) == StarvingPaccy):
             best_dist = 9999
             best_action = None
             for action in actions:
