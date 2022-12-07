@@ -115,9 +115,9 @@ class DumbAgent(CaptureAgent):
         
         if numCarrying >= 1:
             retreat = True
-            print("retreat")
+            #print("retreat")
         if retreat and type(self) == StarvingPaccy: # correct this part -> preveri, ce je napadalec
-            print("we eat?")
+            #print("we eat?")
             #action = random.choice(best_actions)
             #succ = self.get_successor(game_state, action)
             #print(game_state)
@@ -126,10 +126,8 @@ class DumbAgent(CaptureAgent):
             enemies = [game_state.get_agent_state(i) for i in self.get_opponents(game_state)]
             ghosts = [a for a in enemies if not a.is_pacman and a.get_position() is not None]
             if len(ghosts) == 0:
-                print("they're not close")
+                #print("they're not close")
                 retreat = False
-
-            
 
         # Ko zmanjka hrane, se umakni na varno
         if retreat or (food_left <= 2 and type(self) == StarvingPaccy):
@@ -219,6 +217,8 @@ class LittleGhostie(DumbAgent):
         my_state = successor.get_agent_state(self.index)
         my_pos = my_state.get_position()
 
+        #print(my_state.scared_timer)
+
         # Computes whether we're on defense (1) or offense (0)
         features['on_defense'] = 1
         if my_state.is_pacman: features['on_defense'] = 0
@@ -258,7 +258,13 @@ class LittleGhostie(DumbAgent):
         return features
 
     def get_weights(self, game_state, action):
-        return {'num_invaders': -1000, 'on_defense': 100, 'invader_distance': -10, 'stop': -100, 'reverse': -2, 'missing_food_distance': -100}
+        successor = self.get_successor(game_state, action)
+        my_state = successor.get_agent_state(self.index)
+        danger = my_state.scared_timer
+        if danger > 0:
+            return {'num_invaders': 1000, 'on_defense': -100, 'invader_distance': 10, 'stop': -10, 'reverse': 2, 'missing_food_distance': 100}
+        else:
+            return {'num_invaders': -1000, 'on_defense': 100, 'invader_distance': -10, 'stop': -100, 'reverse': -2, 'missing_food_distance': -100}
 
 
 #class ReflexCaptureAgent(CaptureAgent):
