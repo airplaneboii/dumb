@@ -59,6 +59,8 @@ def create_team(first_index, second_index, is_red,
 class DumbAgent(CaptureAgent):
     """
     A base class for reflex agents that choose score-maximizing actions
+    StarvingPaccy is  an an agent, who is more likely to try to eat some coins
+    LittleGhostie is agent, whi is more likely to protect coins, but that does not mean he won't try to eat some coins
     """
 
     def __init__(self, index, time_for_computing=.1):
@@ -225,8 +227,26 @@ class LittleGhostie(DumbAgent):
         enemies = [successor.get_agent_state(i) for i in self.get_opponents(successor)]
         invaders = [a for a in enemies if a.is_pacman and a.get_position() is not None]
         features['num_invaders'] = len(invaders)
+
+        # now check if there is any food missing
+        missing_food = []
+        if self.get_previous_observation() is not None:
+            past_food = self.get_food_you_are_defending(self.get_previous_observation()).as_list()
+            current_food = self.get_food_you_are_defending(game_state).as_list()
+            for i in range(len(past_food)):
+                if past_food[i] not in current_food:
+                    missing_food.append(past_food[i])
+        
+        # if there is food missing, return shortest path to that food
+        if len(missing_food) > 0:
+            #print("missing")
+            #print(missing_food)
+            distances = [self.get_maze_distance(my_pos, a) for a in missing_food]
+            features['missing_food_distance'] = min(distances)
         
         if len(invaders) > 0:
+            #print("invaders")
+            #print(invaders)
             #print(len(invaders))
             dists = [self.get_maze_distance(my_pos, a.get_position()) for a in invaders]
             features['invader_distance'] = min(dists)
@@ -238,7 +258,7 @@ class LittleGhostie(DumbAgent):
         return features
 
     def get_weights(self, game_state, action):
-        return {'num_invaders': -1000, 'on_defense': 100, 'invader_distance': -10, 'stop': -100, 'reverse': -2}
+        return {'num_invaders': -1000, 'on_defense': 100, 'invader_distance': -10, 'stop': -100, 'reverse': -2, 'missing_food_distance': -100}
 
 
 #class ReflexCaptureAgent(CaptureAgent):
