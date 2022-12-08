@@ -141,20 +141,24 @@ class StarvingPaccy(DumbAgent):
             # si na nasprotnikovi polovici
             if len(ghosts) == 0:
                 #--------------------------------------------------------------------------------------------------------------------------
+                #print(action, "a")
+                #print(food_path, abs(len(food_list) - len(food_list_current)))
                 score -= food_path
                 score += 10 * abs(len(food_list) - len(food_list_current))
             else:
+                #print(action, "b")
+                #print(food_path, abs(len(food_list) - len(food_list_current)))
                 score -= food_path
                 score += 10 * abs(len(food_list) - len(food_list_current))
-                score -= 2 * min([self.get_maze_distance(my_pos, ghost.get_position()) for ghost in ghosts])
+                score += 2 * min([self.get_maze_distance(my_pos, ghost.get_position()) for ghost in ghosts])
 
             
             
             
 
 
-            if my_state.scared_timer > 0:
-                print("and RUNN")
+            #if my_state.scared_timer > 0:
+            #    print("and RUNN")
             
         elif my_state.scared_timer > 0 and not my_state.is_pacman:
             # izogibaj se pacmanov
