@@ -79,8 +79,8 @@ class DumbAgent(CaptureAgent):
         best_actions = [action for action, value in zip(actions, values) if value == max_value]
         #print(values)
         
-        if type(self) == LittleGhostie:
-            return "Stop"
+        #if type(self) == StarvingPaccy:
+        #    return "Stop"
 
         # preden vrneš, preveri timer -> če si pacman in ti zmanjkuje časa, se hitro vrni
 
@@ -137,6 +137,7 @@ class StarvingPaccy(DumbAgent):
         food_path = min(food_list_distances)
 
         # preveri, na kateri polovici si
+        # PAZI: GLEJ GLEDE NA TO, KAJ SI TRENUTNO, NE PA KAJ BOS V NASLEDNJEM KORAKU
         if my_state.is_pacman:
             # si na nasprotnikovi polovici
             if len(ghosts) == 0:
@@ -230,6 +231,13 @@ class StarvingPaccy(DumbAgent):
 
 class LittleGhostie(DumbAgent):
     def evaluate(self, game_state, action):
+        features = self.get_features(game_state, action)
+        weights = self.get_weights(game_state, action)
+
+        return features * weights
+    
+    def get_features(self, game_state, action):
+        features = util.Counter()
         score = 0
 
         # postavi se na potencialno naslednjo pozicijo
@@ -266,12 +274,13 @@ class LittleGhostie(DumbAgent):
                 if len(missing_food) > 0:
                     # nekdo nekaj je, vrni se domov
                     missing_food_dist = [self.get_maze_distance(my_pos, food) for food in missing_food]
+                    features['missing_food_distance'] = min(missing_food_dist)
                     score -= min(missing_food_dist)
                     #features['missing_food_distance'] = min(missing_food_dist)
                 
                 enemy_food = self.get_food(game_state).as_list()
                 if len(enemy_food) <= 2 and numCarrying > 0:
-                    pass #it's probably better to solve this in choose_action()
+                    pass # TODO
                     
             #score += 0 # bigbrain (delete this)
 
@@ -287,6 +296,7 @@ class LittleGhostie(DumbAgent):
                     future_min = min(pacman_distances_future)
                     current_min = min(pacman_distances_current)
                     if future_min > current_min:
+                        features['scared_avoiding_pacman'] = 1
                         score += 100
                     #score += 0
                     #features['avoiding_pacman'] = 1 if future_min > current_min else 0
@@ -296,6 +306,7 @@ class LittleGhostie(DumbAgent):
                 food_list = self.get_food(successor).as_list()
                 food_list_distances = [self.get_maze_distance(my_pos, food) for food in food_list]
                 food_path = min(food_list_distances)
+                features['food_path'] = food_path
                 score -= food_path
 
                 # preveri, ce se premaknes blizje pacmanu -> TO SE NE ZGODI
@@ -310,6 +321,7 @@ class LittleGhostie(DumbAgent):
                 if len(missing_food) > 0:
                     # nekdo nekaj je, poisci ga
                     missing_food_dist = [self.get_maze_distance(my_pos, food) for food in missing_food]
+                    features['missing_food'] = min(missing_food_dist)
                     score += 0
                     #features['missing_food_distance'] = min(missing_food_dist)
             
@@ -318,6 +330,7 @@ class LittleGhostie(DumbAgent):
             if len(pacmans_distances) > 0:
                 #print(pacmans_distances)
                 minimal_pacman_distance = min(pacmans_distances)
+                features['minimal_pacman_distance'] = minimal_pacman_distance
                 score -= 1000 * minimal_pacman_distance
             
             # Tu pride Tomazeva funkcija za iskanje hrane
@@ -361,19 +374,19 @@ class LittleGhostie(DumbAgent):
         # ni dobro če stojiš na mestu
         if action == Directions.STOP:
             score -= 100
-            #features['stop'] = 1
+            features['stop'] = 1
 
         # ni ravno dobro če se vračaš
         rev = Directions.REVERSE[game_state.get_agent_state(self.index).configuration.direction]
         if action == rev:
             score -= 2
-            #features['reverse'] = 1
+            features['reverse'] = 1
         
         # return
-        return score
+        return features
 
     def get_weights(self, game_state, action):
-        return {'on_defense': 100, 'num_invaders': -1000, 'missing_food_distance': -500, 'invader_distance': -10, 'stop': -100, 'reverse': -2}
+        return {'missing_food_distance': -1, 'scared_avoiding_pacman': 100, 'food_path': -1, 'missing_food': -100, 'minimal_pacman_distance': -1000, 'stop': -100, 'reverse': -2}
 
 
 
