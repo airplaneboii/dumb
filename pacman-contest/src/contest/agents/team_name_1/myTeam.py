@@ -67,15 +67,16 @@ class DumbAgent(CaptureAgent):
     
     def choose_action(self, game_state):
         print("------------------------------------------------")
+        #print(game_state)
         # Najprej pridobi seznam vseh legalnih potez
         actions = game_state.get_legal_actions(self.index)
 
         # Pridobi oceno za koristnost vsake poteze
         values = [self.evaluate(game_state, action) for action in actions]
         max_value = max(values)
-        if type(self) == StarvingPaccy:
-            print([(x, y) for x, y in zip(actions, values)])
-            print("[" +str(max_value) + "]")
+        #if type(self) == StarvingPaccy:
+        #    print([(x, y) for x, y in zip(actions, values)])
+        #    print("[" + str(max_value) + "]")
         best_actions = [action for action, value in zip(actions, values) if value == max_value]
         #print(values)
         
@@ -118,8 +119,10 @@ class StarvingPaccy(DumbAgent):
     
     def get_features(self, game_state, action):
         features = util.Counter()
-        #--------------------------------------------------------------------------------------------------------------------------
-        score = 0
+
+        # da ve koliko hrane nosi
+        agent = game_state.data.agent_states[self.index] # usefull
+        numCarrying = agent.num_carrying
 
         # postavi se na potencialno naslednjo pozicijo
         successor = self.get_successor(game_state, action)
@@ -140,33 +143,48 @@ class StarvingPaccy(DumbAgent):
 
         food_list = self.get_food(successor).as_list()
         food_list_current = self.get_food(game_state).as_list()
+        food_left = len(food_list_current)
         food_list_distances = [self.get_maze_distance(my_pos, food) for food in food_list]
         food_path = min(food_list_distances)
+
+        #enemy_bases = [game_state.data.agent_states[opponent] for opponent in self.get_opponents(successor)]
+        #print(self.index)
+        #print(game_state.make_observation(self.index))
+        #print(enemy_bases)
+        
+        #home_base_position = None
+        #enemy_base_position = None
 
         # preveri, na kateri polovici si
         # PAZI: GLEJ GLEDE NA TO, KAJ SI TRENUTNO, NE PA KAJ BOS V NASLEDNJEM KORAKU
         if my_state.is_pacman:
+            # najprej preveri, ce je nujno domov
+            if food_left <= 2:
+                dist = self.get_maze_distance(self.start, my_pos)
+                features['going_home'] = dist
+                if len(ghosts) > 0:
+                    ghosts_dist = [self.get_maze_distance(current_position, ghost.get_position()) for ghost in ghosts]
+                    ghosts_current_dist = [self.get_maze_distance(my_pos, ghost.get_position()) for ghost in ghosts]
+                    ghost_approaching = min(ghosts_dist) - min(ghosts_current_dist)
+                    features['going_home_ghost_danger'] = ghost_approaching
+                return features
+
             # si na nasprotnikovi polovici
             features['food_path'] = food_path
             features['food_eat'] = abs(len(food_list) - len(food_list_current))
-            # change that if statement to if len(ghosts) > 0:
-            if len(ghosts) == 0:
-                #--------------------------------------------------------------------------------------------------------------------------
-                #print(action, "a")
-                #print(food_path, abs(len(food_list) - len(food_list_current)))
-                # features['food_path'] = food_path # moved out of if statement
-                score -= food_path
-                # features['food_eat'] = abs(len(food_list) - len(food_list_current)) # moved out of if statement
-                score += 10 * abs(len(food_list) - len(food_list_current))
-            else:
-                #print(action, "b")
-                #print(food_path, abs(len(food_list) - len(food_list_current)))
-                # features['food_path'] = food_path # moved out of if statement
-                score -= food_path
-                # features['food_eat'] = abs(len(food_list) - len(food_list_current)) # moved out of if statement
-                score += 10 * abs(len(food_list) - len(food_list_current))
-                features['ghosts_nearby_distance'] = 1
-                score += 2 * min([self.get_maze_distance(my_pos, ghost.get_position()) for ghost in ghosts])
+
+            # fix this
+            if numCarrying - len(food_list_current) > 0:
+                dist = self.get_maze_distance(self.start, my_pos)
+                features['going_home'] = dist
+                if len(ghosts) > 0:
+                    ghosts_dist = [self.get_maze_distance(current_position, ghost.get_position()) for ghost in ghosts]
+                    ghosts_current_dist = [self.get_maze_distance(my_pos, ghost.get_position()) for ghost in ghosts]
+                    ghost_approaching = min(ghosts_dist) - min(ghosts_current_dist)
+                    features['going_home_ghost_danger'] = ghost_approaching
+
+            if len(ghosts) > 0:
+                features['ghosts_nearby_distance'] = min([self.get_maze_distance(my_pos, ghost.get_position()) for ghost in ghosts])
 
             #if my_state.scared_timer > 0:
             #    print("and RUNN")
@@ -183,17 +201,6 @@ class StarvingPaccy(DumbAgent):
                     diff = future_min - current_min
                     print("diff" + str(diff))
                     features['pacman_danger_close'] = diff
-                    if future_min > current_min:
-                        #--------------------------------------------------------------------------------------------------------------------------
-                        score += 100
-                    elif future_min < current_min:
-                        #--------------------------------------------------------------------------------------------------------------------------
-                        score -= 100
-            
-            #--------------------------------------------------------------------------------------------------------------------------
-            features['food_path'] = food_path
-            score -= food_path
-
 
             print("RUNNN")
         
@@ -201,33 +208,24 @@ class StarvingPaccy(DumbAgent):
             # Pojdi na nasprotnikovo polovico, vmes pa isci, ce je kje kaksen pacman -> ce je, ga napadi
             pacmans_distances = [self.get_maze_distance(my_pos, pacman.get_position()) for pacman in pacmans]
             if len(pacmans_distances) > 0:
-                #print(pacmans_distances)
                 minimal_pacman_distance = min(pacmans_distances)
-                #--------------------------------------------------------------------------------------------------------------------------
                 features['pacman_nearby_distance'] = minimal_pacman_distance
-                score -= 1000 * minimal_pacman_distance
             
-            #--------------------------------------------------------------------------------------------------------------------------
             features['food_path'] = food_path
-            score -= food_path
         
         # ni dobro če stojiš na mestu
         if action == Directions.STOP:
-            #--------------------------------------------------------------------------------------------------------------------------
             features['stop_move'] = 1
-            score -= 100
 
         # ni ravno dobro če se vračaš
         rev = Directions.REVERSE[game_state.get_agent_state(self.index).configuration.direction]
         if action == rev:
-            #--------------------------------------------------------------------------------------------------------------------------
             features['reverse_move'] = 1
-            score -= 2
 
         return features
     
     def get_weights(self, game_state, action):
-        return {'food_path': -1, 'food_eat': 100, 'ghosts_nearby_distance': 200, 'pacman_danger_close': 40, 'pacman_nearby_distance': -1000, 'stop_move': -100, 'reverse_move': -2}
+        return {'food_path': -1, 'food_eat': 100, 'full': 200, 'ghosts_nearby_distance': 2, 'pacman_danger_close': 40, 'pacman_nearby_distance': -1000, 'stop_move': -100, 'reverse_move': -2, 'going_home': -1, 'going_home_ghost_danger': -10}
 
 
 
@@ -256,7 +254,7 @@ class LittleGhostie(DumbAgent):
     
     def get_features(self, game_state, action):
         features = util.Counter()
-        score = 0
+        #score = 0
 
         # postavi se na potencialno naslednjo pozicijo
         successor = self.get_successor(game_state, action)
@@ -293,7 +291,7 @@ class LittleGhostie(DumbAgent):
                     # nekdo nekaj je, vrni se domov
                     missing_food_dist = [self.get_maze_distance(my_pos, food) for food in missing_food]
                     features['missing_food_distance'] = min(missing_food_dist)
-                    score -= min(missing_food_dist)
+                    #score -= min(missing_food_dist)
                     #features['missing_food_distance'] = min(missing_food_dist)
                 
                 enemy_food = self.get_food(game_state).as_list()
@@ -315,7 +313,7 @@ class LittleGhostie(DumbAgent):
                     current_min = min(pacman_distances_current)
                     if future_min > current_min:
                         features['scared_avoiding_pacman'] = 1
-                        score += 100
+                        #score += 100
                     #score += 0
                     #features['avoiding_pacman'] = 1 if future_min > current_min else 0
                     #print(features['avoiding_pacman'])
@@ -325,7 +323,7 @@ class LittleGhostie(DumbAgent):
                 food_list_distances = [self.get_maze_distance(my_pos, food) for food in food_list]
                 food_path = min(food_list_distances)
                 features['food_path'] = food_path
-                score -= food_path
+                #score -= food_path
 
                 # preveri, ce se premaknes blizje pacmanu -> TO SE NE ZGODI
         
@@ -340,7 +338,7 @@ class LittleGhostie(DumbAgent):
                     # nekdo nekaj je, poisci ga
                     missing_food_dist = [self.get_maze_distance(my_pos, food) for food in missing_food]
                     features['missing_food'] = min(missing_food_dist)
-                    score += 0
+                    #score += 0
                     #features['missing_food_distance'] = min(missing_food_dist)
             
             # preveri, ce imas koga v blizini
@@ -349,10 +347,10 @@ class LittleGhostie(DumbAgent):
                 #print(pacmans_distances)
                 minimal_pacman_distance = min(pacmans_distances)
                 features['minimal_pacman_distance'] = minimal_pacman_distance
-                score -= 1000 * minimal_pacman_distance
+                #score -= 1000 * minimal_pacman_distance
             
             # Tu pride Tomazeva funkcija za iskanje hrane
-            score += 0
+            #score += 0
             #features['resting_place'] = 1 # spremeni to glede na to ali te ta smer spravi blizje srediscu ali ne
             
 
@@ -391,13 +389,13 @@ class LittleGhostie(DumbAgent):
         
         # ni dobro če stojiš na mestu
         if action == Directions.STOP:
-            score -= 100
+            #score -= 100
             features['stop'] = 1
 
         # ni ravno dobro če se vračaš
         rev = Directions.REVERSE[game_state.get_agent_state(self.index).configuration.direction]
         if action == rev:
-            score -= 2
+            #score -= 2
             features['reverse'] = 1
         
         # return
