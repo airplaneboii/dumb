@@ -340,7 +340,7 @@ class LittleGhostie(DumbAgent):
             
             # Tu pride Tomazeva funkcija za iskanje hrane (TODO) (preveri, kaj se zgodi, ce das to izven if stavka)
             my_food_distance = [self.get_maze_distance(my_pos, food) for food in my_food]
-            resting_place_distance = sum(my_food_distance)/len(my_food_distance)
+            resting_place_distance = int(sum(my_food_distance)/len(my_food_distance))
             features['resting_place_distance'] = resting_place_distance # spremeni to glede na to ali te ta smer spravi blizje srediscu ali ne
      
         # ni dobro če stojiš na mestu
