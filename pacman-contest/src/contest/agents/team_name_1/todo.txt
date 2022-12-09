@@ -1,0 +1,17 @@
+class DumbAgent():
+    je bolj ali manj končan, tako da ne rabiš nič dela.
+
+class StarvingPaccy():
+    Naredi opcijo, da preveri, če je nasprotnik scared -> če je, naj ga ali poje ali ignorira
+    get_features():
+
+    get_weights():
+
+class LittleGhostie():
+    Če je scared, nima pojma kaj dela (brezglavo leta naokoli)
+    Če je v napadu, je zgubljen (nima pojma, kaj dela)
+    
+    get_features():
+
+    get_weights(): 
+
