@@ -1,0 +1,17 @@
+Kako deluje:
+Oba agenta sta razširitev DumbAgent-a in se ob začetku agentove poteze najprej pokliče choose_action().
+Ta funkcija najprej pridobi vse možne poteze (game_state.get_legal_actions() - ne vem, kako deluje, je že bila implementirana),
+potem pa oceni vsako potezo. Na koncu izbere naključno izbrano potezo izmed vseh z največjem številom točk.
+
+Kako ocenjuje poteze?
+evaluate() pridobi dva seznama (I think dictionarya, ne vem tocno kako se temu reče -> vsak feature poimenuješ in mu daš neko vrednost,
+potem pa vsakemu featureju daš utež), features (get_features()) in weights (get_weights()). Funkcija vrne vsoto produktov istoimenskih komponent.
+
+get_features() najprej postavi osnovne spremenljivke, ki jih rabiš pozneje, potem pa v if stavkih preveriš vsako možno situacijo. Za vsako situacijo
+potem nastaviš ime featureja in njegovo težo (če je true/false torej 1/0, če je pa odvisno od dolžin pa neko naravno število). Funkcijo si prosim
+poglej, preden jo spreminjaš, ker je kar kompleksna.
+
+get_weights() za vsak feature določi utež. PAZI!! Pri določanju uteži prištevaj ugodne in odštevaj neugodne situacije. Za vsako situacijo preveri,
+ali ej ugodna ali neugodna (primer pasti (v katero sem se že ujel): če imaš dan distance do najbližje hrane, ta distance oceniš negativno. Zakaj?
+Ker če je d(A, Food) = 10, d(B, Food) = 3, je tebi bolj všeč d(B, Food), ker je manjša (obratno velja za distance od duhca, ki te preganja)).
+Torej, če imaš feature, za katerega želiš čim nižjo vrednost, mu v get_weights() daš negativno vrednost (v get_features() bi naj bile vse pozitivne).
