@@ -1,17 +1,28 @@
 class DumbAgent():
-    je bolj ali manj končan, tako da ne rabiš nič dela.
+    je bolj ali manj končan, tako da ne rabi nič dela.
 
 class StarvingPaccy():
-    Naredi opcijo, da preveri, če je nasprotnik scared -> če je, naj ga ali poje ali ignorira
-    get_features():
-
-    get_weights():
+    - Naredi, da lahko namensko uporabi token (da prestraši nasprotnika)
+    - Naredi opcijo, da preveri, če je nasprotnik scared -> če je, naj ga ali poje ali ignorira
+    - Naredi, da če ga kdo zasleduje, naj ne hodi v pasti
+    - Naredi, da če ima zasledovalca dovolj daleč, da še zmeraj lahko kaj spotoma poje (naredi to tako,
+      da se lahko po potrebi odstrani -> ne vem, kako dobra ideja sploh je to (dobra samo če se striktno izogiba pastem))
+    - V attacku se včasih zguni (hodi naprej in nazaj) - ko je v bližini ghost
+    - včasih se iz svoje strani vrne naravnost v nasprotnika - ugotovi, zakaj (and fix it)
+    - naredi, da na nasprotnikovi polovici en preveri samo za ghoste, ampak tudi za pacmane
+      (se bodo pojavili, ko je dovolj blizu svoje polovice) -> naj jih zasleduje in poje
 
 class LittleGhostie():
-    Če je scared, nima pojma kaj dela (brezglavo leta naokoli)
-    Če je v napadu, je zgubljen (nima pojma, kaj dela)
+    - Če je scared, nima pojma kaj dela (brezglavo leta naokoli) (tudi potem se ne vrne domov)
+    - Če je v napadu, je zgubljen (nima pojma, kaj dela)
+    - Naredi, da ko se nič posebnega ne dogaja, da ne čaka samo v okolici največje gostote kovančkov,
+      ampak tudi čim bližje nasprotnikovi polovici (tako da gre lahko tudi kaj pobrat, če utegne)
+    - Poskusi različne načine iskanja uteži, kje naj čaka - uporabi clustering in na podlagi tega poskusi
+      najti nek čim boljši način.
     
-    get_features():
 
-    get_weights(): 
+Poskusi uporabiti čim več njihovih funkcij ... za pozicije, razdalje in podobno je ogromno že narejenega.
+Če kaj ne veš, kje bi našel, pomisli, zakaj bi igra to rabila (pač za izvajanje) in išči potem kako igra
+dela v situaciji, kjer bi rabila tisto funkcijo.
 
+Po potrebi posodabljaj ta file.
