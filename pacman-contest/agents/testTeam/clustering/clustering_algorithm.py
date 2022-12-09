@@ -78,3 +78,28 @@ class AgglomerativeHierarchicalClustering:
             print("Cluster: {}".format(id))
             for point in points:
                 print("    {}".format(point))
+    
+    # type(data) == list
+    def add_cluster(self, data):
+        new_index = max(self.clusters.keys())+1
+        self.clusters[new_index] =  data
+        self.data.extend(data)
+        return new_index
+
+    def get_closest_cluster(self, id):
+        min_dist = math.inf
+        closest_cluster = None
+
+        clusters_ids = list(self.clusters.keys())
+        clusters_ids.remove(id)
+        #print("IDs")
+        #print(clusters_ids)
+
+        for i, cluster_i in enumerate(clusters_ids[:-1]):
+                dist = self.measure(self.clusters[cluster_i], self.clusters[id], self.distance)
+                if dist < min_dist:
+                    min_dist, closest_cluster = dist, cluster_i
+        return self.clusters[closest_cluster]
+
+    def get_cluster(self, id):
+        return self.clusters[id]

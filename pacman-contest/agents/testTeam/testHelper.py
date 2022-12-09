@@ -77,12 +77,17 @@ def test5():
                 graph.add_edge((i,j), (i,j+1))
     #print(graph)
 
+    print(graph.edges[(1,1)])
+    #print(graph.edges)
+    print("\n")
     graph2 = graph.get_subgraph([(1,1)])
-    #print(graph2)
+    print(graph2)
     graph2.clean()
-    #print(graph2)
+    print(graph2)
 
-    graph3 = expand_subgraph(graph, expand_subgraph(graph, graph2))
+    print("\n")
+    graph3 = expand_subgraph(graph, graph2)
+    #graph3 = expand_subgraph(graph, expand_subgraph(graph, graph2))
     print(graph3)
     graph3.clean()
     print(graph3)
@@ -103,8 +108,6 @@ def test6():
             "%%%%%%%%%%%%"]
     graph1 = generate_graph_from_layout(layout)
     print(graph1)
-    graph2 = generate_graph_from_layout(layout, True)
-    print(graph2)
 
 def test7():
     layout = ["%%%%%%%%%%%%",
@@ -114,14 +117,104 @@ def test7():
             "%13     o  %",
             "%%%%%%%%%%%%"]
 
-    graph = generate_graph_from_layout(layout, True)
+    graph = generate_graph_from_layout(layout)
     print(graph)
 
+    print("\n")
     graph2 = graph.get_subgraph([(2,4), (2,5)])
-    graph2 = expand_subgraph(graph, expand_subgraph(graph, graph2))
-    #print(graph2)
+    print(graph2)
+    graph2.clean()
+    print(graph2)
+
+    print("\n")
+    graph3 = expand_subgraph(graph, graph2)
+    graph3.clean()
+    print(graph3)
+    graph3 = expand_subgraph(graph, graph3)
+    graph3.clean()
+    print(graph3)
     #visualize(layout, graph2)
 
+def test8():
+    layout = ["%%%%%%%%%%%%",
+            "%        24%",
+            "%      %%%%%",
+            "%%%%%      %",
+            "%13     o  %",
+            "%%%%%%%%%%%%"]
+
+    graph = generate_graph_from_layout(layout)
+    #print()
+    print(is_trap(graph, (2,1), (3,1)))     # bottom left to right -> not trap (actually in trap, but going away)
+    #print()
+    print(is_trap(graph, (3,1), (2,1)))     # botton left to left -> going deeper into trap
 
 
-test7()
+def test9():
+    layout = ["%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%",
+            "%   %. %.%.%       %     %.%.%4%",
+            "% % %%       %%  %   %%%   %.%2%",
+            "% % %. % %%%    %%%% .%..% % % %",
+            "% % %% % ..% %   %   %%%%% % % %",
+            "% %    %%%%% %%%   %%%.% o % % %",
+            "% %% % ..%.  %.%%%       %   % %",
+            "% %. %%.%%%%        %.%%%%  %% %",
+            "% %%  %%%%.%        %%%%.%% .% %",
+            "% %   %       %%%.%  .%.. % %% %",
+            "% % % o %.%%%   %%% %%%%%    % %",
+            "% % % %%%%%   %   % %.. % %% % %",
+            "% % % %..%. %%%%    %%% % .% % %",
+            "%1%.%   %%%   %  %%       %% % %",
+            "%3%.%.%     %       %.%.% .%   %",
+            "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"]
+    graph = generate_graph_from_layout(layout)
+    print(graph)
+    previous_nodes, shortest_path = dijkstra_algorithm(graph, (1,1))
+    for path in shortest_path:
+        print(str(path) + ": " + str(shortest_path[path]))
+
+def test10():
+    layout = ["%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%",
+            "%   %. %.%.%       %     %.%.%4%",
+            "% % %%       %%  %   %%%   %.%2%",
+            "% % %. % %%%    %%%% .%..% % % %",
+            "% % %% % ..% %   %   %%%%% % % %",
+            "% %    %%%%% %%%   %%%.% o % % %",
+            "% %% % ..%.  %.%%%       %   % %",
+            "% %. %%.%%%%        %.%%%%  %% %",
+            "% %%  %%%%.%        %%%%.%% .% %",
+            "% %   %       %%%.%  .%.. % %% %",
+            "% % % o %.%%%   %%% %%%%%    % %",
+            "% % % %%%%%   %   % %.. % %% % %",
+            "% % % %..%. %%%%    %%% % .% % %",
+            "%1%.%   %%%   %  %%       %% % %",
+            "%3%.%.%     %       %.%.% .%   %",
+            "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"]
+    graph = generate_graph_from_layout(layout)
+    print(get_bordering_fields(graph, layout, is_red=True, my_border=True))
+    print(get_bordering_fields(graph, layout, True, False))
+    print(get_bordering_fields(graph, layout, False, True))
+    print(get_bordering_fields(graph, layout, False, False))
+
+def test11():
+    layout = ["%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%",
+            "%   %. %.%.%       %     %.%.%4%",
+            "% % %%       %%  %   %%%   %.%2%",
+            "% % %. % %%%    %%%% .%..% % % %",
+            "% % %% % ..% %   %   %%%%% % % %",
+            "% %    %%%%% %%%   %%%.% o % % %",
+            "% %% % ..%.  %.%%%       %   % %",
+            "% %. %%.%%%%        %.%%%%  %% %",
+            "% %%  %%%%.%        %%%%.%% .% %",
+            "% %   %       %%%.%  .%.. % %% %",
+            "% % % o %.%%%   %%% %%%%%    % %",
+            "% % % %%%%%   %   % %.. % %% % %",
+            "% % % %..%. %%%%    %%% % .% % %",
+            "%1%.%   %%%   %  %%       %% % %",
+            "%3%.%.%     %       %.%.% .%   %",
+            "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"]
+    graph = generate_graph_from_layout(layout)
+    fields = get_bordering_fields(graph, layout, True, True)
+    print(return_min_len_to_fields(graph, (1,1), fields))
+
+test11()

@@ -1,5 +1,7 @@
 import copy
 import numpy as np
+from clustering.clustering_algorithm import *
+from matplotlib import pyplot as plt
 
 class Node:
     # type(labels)  
@@ -46,17 +48,17 @@ class Graph:
             for i in range(len(values)):
                 node = Node(values[i])
                 self.nodes.append(node)
-                self.edges[values[i]] = []
+                self.edges[values[i]] = {}
     
     # node wasn't created yet
     def add_new_node(self, value, labels=None):
         assert value not in [node.value for node in self.nodes], "Already exists"
         if labels is None:
             self.nodes.append(Node(value))
-            self.edges[value] = []
+            self.edges[value] = {}
         else:
             self.nodes.append(Node(value, labels))
-            self.edges[value] = []
+            self.edges[value] = {}
 
     # node was created before (may not be needed)
     #def add_node(self, node):
@@ -71,7 +73,7 @@ class Graph:
     
     # possible directed graphs
     def add_neighbor(self, value1, value2, weight=1):
-        self.edges[value1].append([value2, weight])
+        self.edges[value1][value2] = weight
 
     def add_edge(self, value1, value2, weight=1):
         #print(len(self.nodes))
@@ -88,9 +90,15 @@ class Graph:
     
     def add_edges(self, value, edges):
         assert value in [node.value for node in self.nodes], str(value) + " doesn't exist"
-        for edge in edges:
+        #print(self.edges[value])
+        for edge in edges.keys():
+            #print("hehe")
+            #print("edge: " + str(edge))
+            #print(type(self.edges[value]))
+            #print(value)
             if not edge in self.edges[value]:
-                self.edges[value].append(edge)
+                self.edges[value][edge] = edges[edge]
+            #print(self.edges[value])
         #self.edges[value] += edges
 
     
@@ -98,12 +106,13 @@ class Graph:
         return len(self.nodes)
     
     def are_connected(self, value1, value2):
-        #node1 = self.find_node(value1)
-        #node2 = self.find_node(value2)
-        return value2 in [pos[0] for pos in self.edges[value1]]     # pos[1] is weight
+        return value1 in self.get_edges()[value2].keys() or value2 in self.get_edges()[value1].keys()
     
     def get_nodes(self):
         return self.nodes
+    
+    def get_edges(self):
+        return self.edges
     
     def get_copy(self):
         return copy.deepcopy(self)
@@ -125,9 +134,6 @@ class Graph:
         
         g = Graph()
         for value in nValues:
-            #print(value)
-            #print(value in self.edges.keys())
-            #print(self.edges[value])
             g.add_new_node(value)
             g.add_edges(value, self.edges[value])  # add all extra edges
         
@@ -163,8 +169,14 @@ class Graph:
         
         for value in values:
             edges = self.edges[value]
+            to_remove = []
 
-            self.edges[value] = list(filter(lambda v: v[0] in values, edges))
+            #self.edges[value] = list(filter(lambda v: v[0] in values, edges))
+            for edge in edges.keys():
+                if not edge in values:
+                    to_remove.append(edge)
+            for e in to_remove:
+                edges.pop(e, None)
 
     
     # vertices vertically
@@ -185,16 +197,13 @@ class Graph:
 %13     o  %
 %%%%%%%%%%%%
 '''
-def generate_graph_from_layout(layout, reverse=False):
+def generate_graph_from_layout(layout):
     nodes = []
-    for i in range(len(layout)-1):
-        for j in range(len(layout[i])):
+    for i in range(1,len(layout)-1):
+        for j in range(1,len(layout[i])-1):
             coordinates = (i,j)
             if (layout[i][j] != "%"):
-                if (reverse):
-                    nodes.append(Node((j,len(layout)-i-2)))
-                else:
-                    nodes.append(Node(coordinates))
+                nodes.append(Node((j,len(layout)-i-1)))
     
     graph = Graph([n.get_value() for n in nodes])
 
@@ -236,17 +245,14 @@ def expand_subgraph(graph, subgraph):
     newGraph = subgraph.get_copy()
 
     for value in sValues:
-        #print(value)
-        edges = graph.edges[value]
-        newGraph.add_edges(value, edges)
+        newGraph.add_edges(value, graph.edges[value])
     
-    #print(newGraph)
+    #print(newGraph.edges)
 
     for value in values:
         for sValue in sValues:
-            edges = [edge[0] for edge in graph.edges[sValue]]
+            edges = graph.edges[sValue].keys()
             if value in edges and not value in sValues:
-                #print(graph.edges[value])
                 newGraph.add_new_node(value)
                 newGraph.add_edges(value, graph.edges[value])
                 break
@@ -270,3 +276,123 @@ def visualize(layout, graph):
                 out += layout[i][j]
         out += "\n"
     print(out)
+
+def dijkstra_algorithm(graph, start_node):
+    unvisited_nodes = list(graph.get_nodes())
+    #print(unvisited_nodes)
+    unvisited_nodes = [node.get_value() for node in unvisited_nodes]
+    shortest_path = {}
+    previous_nodes = {}
+
+    # We'll use max_value to initialize the "infinity" value of the unvisited nodes   
+    max_value = float("inf")
+    for node in unvisited_nodes:
+        shortest_path[node] = max_value
+
+    # However, we initialize the starting node's value with 0   
+    shortest_path[start_node] = 0
+    while unvisited_nodes:
+        current_min_node = None
+        for node in unvisited_nodes: # Iterate over the nodes
+            if current_min_node == None:
+                current_min_node = node
+            elif shortest_path[node] < shortest_path[current_min_node]:
+                current_min_node = node
+
+        # The code block below retrieves the current node's neighbors and updates their distances
+        #for e in graph.get_edges():
+        #    print(str(e) + ": " + str(graph.get_edges()[e]))
+        #print(type(current_min_node))
+        #print(graph.get_edges()[current_min_node])
+        neighbors = graph.get_edges()[current_min_node].keys()
+        costs = graph.get_edges()[current_min_node].values()
+        #print(costs)
+
+        for neighbor in neighbors:
+            #iss = graph.get_edges()[current_min_node]
+            e = graph.get_edges()[current_min_node]
+            #print(e)
+            #print(e[neighbor])
+            tentative_value = shortest_path[current_min_node] + e[neighbor]
+            #tentative_value = shortest_path[current_min_node] + graph.get_edges()[current_min_node] neighbor
+            #tentative_value = shortest_path[current_min_node] + 1
+            if tentative_value < shortest_path[neighbor]:
+                shortest_path[neighbor] = tentative_value
+                # We also update the best path to the current node
+                previous_nodes[neighbor] = current_min_node
+        unvisited_nodes.remove(current_min_node)
+    return previous_nodes, shortest_path
+
+
+# note: very important function
+# returns whether movement in certain direction traps agent
+# assuming curr_position and new_position are neighboring and
+# movement from curr_position to new_position
+def is_trap(graph, curr_position, new_position):
+    graph2 = graph.get_copy()
+    # delete edge
+    graph2.edges[curr_position].pop(new_position, None)
+    graph2.edges[new_position].pop(curr_position, None)
+    # calculate paths
+    previous_nodes, shortest_path = dijkstra_algorithm(graph2, new_position)
+    #print((shortest_path))
+    # if not enough exist -> trap
+    return sum(1 for v in shortest_path.values() if v == float('inf')) >= len(shortest_path) / 2
+
+def get_bordering_fields(graph, layout, is_red, my_border):
+    xMin = 1
+    xMax = len(layout[0])-2
+    yMin = 1
+    yMax = len(layout)-2
+    xL = (xMin+xMax)//2
+    xR = xL + 1
+    fieldsL = []
+    fieldsR = []
+    for i in range(yMin, yMax+1):
+        if (xL,i) in [node.value for node in graph.nodes]:
+           fieldsL.append((xL, i))
+        if (xR,i) in [node.value for node in graph.nodes]:
+            fieldsR.append((xR, i))
+    
+    if is_red ^ my_border:
+        return fieldsR
+    else:
+        return fieldsL
+
+def return_min_len_to_fields(graph, pos, fields):
+    previous_nodes, shortest_path = dijkstra_algorithm(graph, pos)
+    print(fields)
+    print(shortest_path.keys())
+    distances = {key: shortest_path[key] for key in fields}
+    for p in distances:
+        print(str(p) + ": " + str(distances[p]))
+    #print(shortest_path)
+    return min(distances.values())
+
+# return cluster object for pos (agent position), dataset(food) and distance(get_maze_distance())
+def get_cluster_object(pos, dataset, distance, K):
+        M = lambda x1,x2: distance(x1, x2)
+
+        agg_hierarchical_clustering = AgglomerativeHierarchicalClustering(dataset, K, M)
+        agg_hierarchical_clustering.run_algorithm()
+        agg_hierarchical_clustering.print()
+
+        #plt.plot([var[0] for var in dataset], [var[1] for var in dataset], 'ro')
+        #plt.show()
+        #print(len(agg_hierarchical_clustering.clusters.items()))
+        #print(agg_hierarchical_clustering.clusters[0])
+        id = agg_hierarchical_clustering.add_cluster([pos])
+        #print("closest: ")
+        #print(dataset)
+        #print(agg_hierarchical_clustering.data)
+
+        colors = ["b", "c", "g", "k", "m", "r", "y"]
+        markers = ["o", "s"]
+        for i in range(K+1):
+            cluster = agg_hierarchical_clustering.clusters[i]
+            plt.plot([var[0] for var in cluster], [var[1] for var in cluster], colors[i%len(colors)] + markers[i%len(markers)])
+        plt.xlim([0, max([var[0] for var in dataset])+2])
+        plt.ylim([0, max([var[1] for var in dataset])+2])
+        plt.show()
+
+        return agg_hierarchical_clustering

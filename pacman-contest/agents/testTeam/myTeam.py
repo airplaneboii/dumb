@@ -184,7 +184,7 @@ class DefensiveReflexAgent(ReflexCaptureAgent):
 class MyAgent(ReflexCaptureAgent):
 
     def get_features(self, game_state, action):
-        time.sleep(0.3)
+        #time.sleep(0.3)
         #print("game state:")
         #print(game_state)
         #print(action)
@@ -204,7 +204,10 @@ class MyAgent(ReflexCaptureAgent):
         return features
 
     def choose_action(self, game_state):
+        time.sleep(0.2)
         actions = game_state.get_legal_actions(self.index)
+        print(self.get_successor(game_state, "Stop").get_agent_state(self.index).get_position())
+        #print(self.is_red)
 
         # You can profile your evaluation time by uncommenting these lines
         start = time.time()
@@ -218,21 +221,21 @@ class MyAgent(ReflexCaptureAgent):
         game_str = str(game_state).splitlines()
         #for i in range(len(game_str)):
         #    print(game_str[i])
-        graph = generate_graph_from_layout(game_str, True)
+        graph = generate_graph_from_layout(game_str)
         #print(graph)
 
         food = self.get_food(game_state).as_list()
 
-        print(food)
+        '''print(food)
         print(food[1])
         print(food[2])
-        print(self.get_maze_distance(food[1], food[2]))
+        print(self.get_maze_distance(food[1], food[2]))'''
         food_left = len(food)
         #print(food)
         succ = self.get_successor(game_state, actions[0])
         #print(succ.get_agent_position(self.index))
 
-        dataset = food
+        '''dataset = food
         K = 9
         M = lambda x1,x2: self.get_maze_distance(x1, x2)
         print(type(M))
@@ -246,15 +249,24 @@ class MyAgent(ReflexCaptureAgent):
         #plt.show()
         print(len(agg_hierarchical_clustering.clusters.items()))
         print(agg_hierarchical_clustering.clusters[0])
+        my_pos = self.get_successor(game_state, "Stop").get_agent_state(self.index).get_position()
+        print(my_pos)
+        id = agg_hierarchical_clustering.add_cluster([my_pos])
+        print("closest: ")
+        print(dataset)
+        print(agg_hierarchical_clustering.data)
 
         colors = ["b", "c", "g", "k", "m", "r", "y"]
         markers = ["o", "s"]
-        for i in range(K):
+        for i in range(K+1):
             cluster = agg_hierarchical_clustering.clusters[i]
             plt.plot([var[0] for var in cluster], [var[1] for var in cluster], colors[i%len(colors)] + markers[i%len(markers)])
         plt.xlim([0, max([var[0] for var in dataset])+2])
         plt.ylim([0, max([var[1] for var in dataset])+2])
-        plt.show()
+        plt.show()'''
+
+        my_pos = self.get_successor(game_state, "Stop").get_agent_state(self.index).get_position()
+        get_cluster_object(my_pos, food, lambda x1,x2: self.get_maze_distance(x1, x2), 9)
 
 
 
