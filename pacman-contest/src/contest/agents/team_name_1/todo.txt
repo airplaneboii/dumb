@@ -9,8 +9,8 @@ class StarvingPaccy():
       da se lahko po potrebi odstrani -> ne vem, kako dobra ideja sploh je to (dobra samo če se striktno izogiba pastem))
     - V attacku se včasih zgubi (hodi naprej in nazaj) - ko je v bližini ghost
     - včasih se iz svoje strani vrne naravnost v nasprotnika - ugotovi, zakaj (and fix it)
-    - naredi, da na nasprotnikovi polovici en preveri samo za ghoste, ampak tudi za pacmane
-      (se bodo pojavili, ko je dovolj blizu svoje polovice) -> naj jih zasleduje in poje
+    - [naredi, da na nasprotnikovi polovici en preveri samo za ghoste, ampak tudi za pacmane
+      (se bodo pojavili, ko je dovolj blizu svoje polovice) -> naj jih zasleduje in poje]-d
 
 class LittleGhostie():
     - Če je scared, nima pojma kaj dela (brezglavo leta naokoli) (tudi potem se ne vrne domov)
