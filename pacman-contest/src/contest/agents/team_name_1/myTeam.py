@@ -66,20 +66,20 @@ class DumbAgent(CaptureAgent):
         CaptureAgent.register_initial_state(self, game_state)
     
     def choose_action(self, game_state):
-        #print("------------------------------------------------")
+        print("------------------------------------------------")
         # Najprej pridobi seznam vseh legalnih potez
         actions = game_state.get_legal_actions(self.index)
 
         # Pridobi oceno za koristnost vsake poteze
         values = [self.evaluate(game_state, action) for action in actions]
-        
-        #if type(self) == StarvingPaccy:
-        #    print([(x, y) for x, y in zip(actions, values)])
-        #    print("[" + str(max_value) + "]")
 
         # Pridobi vse najboljse poteze
         max_value = max(values)
         best_actions = [action for action, value in zip(actions, values) if value == max_value]
+
+        if type(self) == StarvingPaccy:
+            print([(x, y) for x, y in zip(actions, values)])
+            print("[" + str(max_value) + "]")
 
         return random.choice(best_actions)
     
@@ -94,6 +94,10 @@ class DumbAgent(CaptureAgent):
     def evaluate(self, game_state, action):
         features = self.get_features(game_state, action)
         weights = self.get_weights(game_state, action)
+
+        print(action)
+        print(features)
+        print(weights)
 
         return features * weights
 
@@ -173,17 +177,8 @@ class StarvingPaccy(DumbAgent):
             features['food_path'] = food_path
             features['food_eat'] = abs(len(food_list) - len(food_list_current))
             
-
             # fix this
             if numCarrying - len(food_list_current) > 0:
-                #   if home_base_position[0] > 0:
-                #       dir = 0 if (layout.width - home_base_position[0]) < layout.width/2 else -1
-                #       distances = [self.get_maze_distance(my_pos, (dir + layout.width/2, i)) for i in range(1, layout.height - 1) if not layout.walls[int(dir + layout.width/2)][i]]
-                #   else:
-                #       dir = 0 if (layout.height - home_base_position[1]) < layout.height/2 else -1
-                #       distances = [self.get_maze_distance((i, dir + layout.width/2), my_pos) for i in range(1, layout.height - 1) if not layout.walls[i][int(dir + layout.width/2)]]
-                #   dist = min(distances)
-                
                 features['going_home'] = dist * 10
                 if len(ghosts) > 0:
                     ghosts_dist = [self.get_maze_distance(current_position, ghost.get_position()) for ghost in ghosts]
@@ -192,11 +187,17 @@ class StarvingPaccy(DumbAgent):
                     features['going_home_ghost_danger'] = ghost_approaching * 10
 
             if len(ghosts) > 0:
-                features['ghosts_nearby_distance'] = min([self.get_maze_distance(my_pos, ghost.get_position()) for ghost in ghosts])
+                print("danger")
+                #features['ghosts_nearby_distance'] = min([self.get_maze_distance(my_pos, ghost.get_position()) for ghost in ghosts])
+                features['going_home'] = dist
+                if len(ghosts) > 0:
+                    #features['testing'] = 1
+                    ghosts_dist = [self.get_maze_distance(current_position, ghost.get_position()) for ghost in ghosts]
+                    ghosts_current_dist = [self.get_maze_distance(my_pos, ghost.get_position()) for ghost in ghosts]
+                    ghost_approaching = min(ghosts_dist) - min(ghosts_current_dist)
+                    features['going_home_ghost_danger'] = ghost_approaching
+                #return features
 
-            # Pojdi domov, ce se ti splaca
-            #if my_state.scared_timer > 0:
-            #    print("and RUNN")
             
         elif my_state.scared_timer > 0 and not my_state.is_pacman:
             # izogibaj se pacmanov
@@ -215,10 +216,12 @@ class StarvingPaccy(DumbAgent):
         
         else:
             pacmanDanger = False if len(ghosts) == 0 else True
-            # Pojdi na nasprotnikovo polovico, vmes pa isci, ce je kje kaksen pacman -> ce je, ga napadi
-            if my_current_state.is_pacman and (numCarrying or pacmanDanger) > 0:
+            
+            # Edge case - ce si trenutno pacman in nosis hrano / je v blizini duhec, se umakni na svojo polovico
+            if my_current_state.is_pacman and (numCarrying or pacmanDanger) > 0: 
                 features["drop_food"] = 1
-
+            
+            # Pojdi na nasprotnikovo polovico, vmes pa isci, ce je kje kaksen pacman -> ce je, ga napadi
             pacmans_distances = [self.get_maze_distance(my_pos, pacman.get_position()) for pacman in pacmans]
             if len(pacmans_distances) > 0:
                 minimal_pacman_distance = min(pacmans_distances)
@@ -239,17 +242,18 @@ class StarvingPaccy(DumbAgent):
     
     def get_weights(self, game_state, action):
         weights = util.Counter()
-        weights['food_path'] = int(-1)                  # 0, 1, 2, 3, 4 ........... | vecje je, dlje je hrana (vecje = slabse)
-        weights['food_eat'] = int(100)                  # 0, 1 .................... | ali poje hrano s to potezo
+        weights['food_path'] = -1                  # 0, 1, 2, 3, 4 ........... | vecje je, dlje je hrana (vecje = slabse)
+        weights['food_eat'] = 100                  # 0, 1 .................... | ali poje hrano s to potezo
         #weights['full'] = int(200)                     # ni v uporabi??
-        weights['ghosts_nearby_distance'] = int(20)     # 0, 1, 2, 3, 4 ........... | vecje je, dlje je duhec (vecje = boljse)
-        weights['pacman_danger_close'] = int(40)        # naceloma 0 ali 1, maybe 2 | vecje je, boljse je
-        weights['pacman_nearby_distance'] = int(-1000)  # 0, 1, 2, 3, 4 ........... | vecje je, dlje je pacman (vecje = slabse)
-        weights['stop_move'] = int(-100)                # 0, 1 .................... | zavraca neaktivnost
-        weights['reverse_move'] = int(-2)               # 0, 1 .................... | zavraca vracanje nazaj
-        weights['going_home'] = int(-5)                 # 0, 1, 2, 3, 4 ........... | vecje je, dlje je dom (vecje = slabse)
-        weights['going_home_ghost_danger'] = int(-100)  # naceloma 0 ali 1, maybe 2 | vecje je, slabse je
+        weights['ghosts_nearby_distance'] = 10     # 0, 1, 2, 3, 4 ........... | vecje je, dlje je duhec (vecje = boljse)
+        weights['pacman_danger_close'] = 40        # naceloma 0 ali 1, maybe 2 | vecje je, boljse je
+        weights['pacman_nearby_distance'] = -1000  # 0, 1, 2, 3, 4 ........... | vecje je, dlje je pacman (vecje = slabse)
+        weights['stop_move'] = -100                # 0, 1 .................... | zavraca neaktivnost
+        weights['reverse_move'] = -2               # 0, 1 .................... | zavraca vracanje nazaj
+        weights['going_home'] = -5                 # 0, 1, 2, 3, 4 ........... | vecje je, dlje je dom (vecje = slabse)
+        weights['going_home_ghost_danger'] = -100  # naceloma 0 ali 1, maybe 2 | vecje je, slabse je
         weights['drop_food'] = 10000
+        #weights['testing'] = 100000
         return weights
 
 
