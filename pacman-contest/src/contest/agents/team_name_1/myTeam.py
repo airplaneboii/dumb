@@ -171,7 +171,7 @@ class StarvingPaccy(DumbAgent):
                     ghosts_current_dist = [self.get_maze_distance(my_pos, ghost.get_position()) for ghost in ghosts]
                     ghost_approaching = min(ghosts_dist) - min(ghosts_current_dist)
                     features['going_home_ghost_danger'] = ghost_approaching
-                return features
+                return features # preveri ce je smiselno
 
             # si na nasprotnikovi polovici
             features['food_path'] = food_path
@@ -187,8 +187,8 @@ class StarvingPaccy(DumbAgent):
                     features['going_home_ghost_danger'] = ghost_approaching * 10
 
             if len(ghosts) > 0:
-                print("danger")
-                #features['ghosts_nearby_distance'] = min([self.get_maze_distance(my_pos, ghost.get_position()) for ghost in ghosts])
+                #print("danger")
+                #features['ghosts_nearby_distance'] = min([self.get_maze_distance(my_pos, ghost.get_position()) for ghost in ghosts]) # preveri, ali je to potrebno
                 features['going_home'] = dist
                 if len(ghosts) > 0:
                     #features['testing'] = 1
@@ -197,6 +197,11 @@ class StarvingPaccy(DumbAgent):
                     ghost_approaching = min(ghosts_dist) - min(ghosts_current_dist)
                     features['going_home_ghost_danger'] = ghost_approaching
                 #return features
+            
+            if len(pacmans)> 0:
+                pacmans_distances = [self.get_maze_distance(my_pos, pacman.get_position()) for pacman in pacmans]
+                minimal_pacman_distance = min(pacmans_distances)
+                features['pacman_nearby_distance'] = minimal_pacman_distance
 
             
         elif my_state.scared_timer > 0 and not my_state.is_pacman:
