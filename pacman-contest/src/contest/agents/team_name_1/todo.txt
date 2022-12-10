@@ -16,8 +16,8 @@ class StarvingPaccy():
     - 
 
 class LittleGhostie():
-    - Če je scared, nima pojma kaj dela (brezglavo leta naokoli) (tudi potem se ne vrne domov)
-    - Če je v napadu, je zgubljen (nima pojma, kaj dela)
+    - Če je scared, nima pojma kaj dela (brezglavo leta naokoli) (tudi potem se ne vrne domov) - Tomaž (delam na tem)
+    - Če je v napadu, je zgubljen (nima pojma, kaj dela) - Tomaž (povezano z zgoraj)
     - Naredi, da ko se nič posebnega ne dogaja, da ne čaka samo v okolici največje gostote kovančkov,
       ampak tudi čim bližje nasprotnikovi polovici (tako da gre lahko tudi kaj pobrat, če utegne)
     - Poskusi različne načine iskanja uteži, kje naj čaka - uporabi clustering in na podlagi tega poskusi
