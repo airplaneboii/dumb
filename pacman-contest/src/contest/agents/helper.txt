@@ -1,0 +1,43 @@
+info for helper.py
+usage examples in testHelper.py
+
+class Node
+- represents Nodes in graph
+- value main attribute
+- function don't need explanations (hopefully :))
+
+class Graph
+- graph
+- representation of nodes and edges: {nodeValue: edges}, edges -> {nodeValue2, cost}
+- default cost is 1
+- get_subgraph(self, nValues) -> returns graph, nodes values in nValues, extra edges (with non-existing neighbor) remain
+- clean(self) -> removes extra edges
+
+generate_graph_from_layout(layout) -> no explanation needed
+
+expand_subgraph(graph, subgraph) -> makes new graph with BFS from subgraph inside graph, currently not in use (I believe)
+
+visualize(layout, graph) -> I don't know why I made this :)
+
+dijkstra_algorithm(graph, start_node) -> return distances from start_node to ALL other nodes
+    - nodeValue - distance pairs
+    - very useful
+
+is_trap(graph, curr_position, new_position)
+    - check if movement from curr_position to new_position is trapping us
+    - direction important
+
+get_bordering_fields(graph, layout, is_red, my_border)
+    - returns fields, where transition pacman <-> ghost occurs
+    - is_red: bool, from which perspective we observe
+    - my_border: bool, if we want "our fields" or "opposing fields"
+
+return_min_len_to_fields(graph, pos, fields)
+    - returns minimal distance from pos to fields (border)
+
+get_cluster_object(pos, dataset, distance, K)
+    - pos: position, for detection which coins are closest
+    - dataset: coins (objects we want to cluster)
+    - distance: distance measure (using get_maze_distance())
+    - K: number of clusters (without pos, which is added extra)
+    

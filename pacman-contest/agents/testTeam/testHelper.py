@@ -145,7 +145,7 @@ def test8():
 
     graph = generate_graph_from_layout(layout)
     #print()
-    print(is_trap(graph, (2,1), (3,1)))     # bottom left to right -> not trap (actually in trap, but going away)
+    print(is_trap(graph, (2,1), (2,1)))     # bottom left to right -> not trap (actually in trap, but going away)
     #print()
     print(is_trap(graph, (3,1), (2,1)))     # botton left to left -> going deeper into trap
 
@@ -217,4 +217,4 @@ def test11():
     fields = get_bordering_fields(graph, layout, True, True)
     print(return_min_len_to_fields(graph, (1,1), fields))
 
-test11()
+test8()

@@ -7,7 +7,7 @@ class StarvingPaccy():
     - Naredi, da če ima duhca v blizini, naj ne hodi v pasti. Ce je v njej, naj jo poskusi zapustiti.
     - Naredi, da če ima zasledovalca dovolj daleč, da še zmeraj lahko kaj spotoma poje (naredi to tako,
       da se lahko po potrebi odstrani -> ne vem, kako dobra ideja sploh je to (dobra samo če se striktno izogiba pastem))
-    - V attacku se včasih zgubi (hodi naprej in nazaj oziroma stoji na mestu (če je v pasti)) - ko je v bližini ghost
+    - V attacku se včasih zgubi (hodi naprej in nazaj oziroma stoji na mestu (če je v pasti)) - ko je v bližini ghost - Tomaž (naj bi zdaj delalo)
     - včasih se iz svoje strani vrne naravnost v nasprotnika - ugotovi, zakaj (and fix it)
     - [naredi, da na nasprotnikovi polovici en preveri samo za ghoste, ampak tudi za pacmane
       (se bodo pojavili, ko je dovolj blizu svoje polovice) -> naj jih zasleduje in poje]-Domen (mislim, da zdaj dela)
