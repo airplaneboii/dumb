@@ -1,6 +1,6 @@
 import copy
 import numpy as np
-from clustering.clustering_algorithm import *
+#from clustering.clustering_algorithm import *
 from matplotlib import pyplot as plt
 
 class Node:
@@ -199,16 +199,24 @@ class Graph:
 '''
 def generate_graph_from_layout(layout):
     nodes = []
-    for i in range(1,len(layout)-1):
+    for i in range(1,len(layout)-3):
         for j in range(1,len(layout[i])-1):
-            coordinates = (i,j)
+            #print(str((i,j)) + " -> " + str((j,len(layout)-i-3)) + ": " + str(layout[i][j]))
             if (layout[i][j] != "%"):
-                nodes.append(Node((j,len(layout)-i-1)))
+                nodes.append(Node((j,len(layout)-i-3)))
     
     graph = Graph([n.get_value() for n in nodes])
+    #print([node.value for node in graph.get_nodes()])
+    #print([node.value for node in nodes])
+    #print((1,1) in [node.value for node in graph.get_nodes()])
 
-    #for n in graph.get_nodes():
-    #    print(n)
+    for x in range(1, len(layout[0])):
+        for y in range(1, len(layout)):
+            #print(str((x,y)))
+            if ((x,y) in [node.value for node in graph.get_nodes()]):
+                #print(str((x,y)))
+                pass
+    
 
     for node in graph.get_nodes():
         coordinates = node.get_value()
@@ -328,11 +336,17 @@ def dijkstra_algorithm(graph, start_node):
 # returns whether movement in certain direction traps agent
 # assuming curr_position and new_position are neighboring and
 # movement from curr_position to new_position
-def is_trap(graph, curr_position, new_position):
+# barriers: dodane ovire (npr. duhec na poti)
+def is_trap(graph, curr_position, new_position, barriers=[]):
     graph2 = graph.get_copy()
     # delete edge
     graph2.edges[curr_position].pop(new_position, None)
     graph2.edges[new_position].pop(curr_position, None)
+    for barrier in barriers:
+        #print(barrier)
+        node = graph2.get_nodes()[barrier]
+        graph2.get_nodes().remove(node)
+    graph2.clean()
     # calculate paths
     previous_nodes, shortest_path = dijkstra_algorithm(graph2, new_position)
     #print((shortest_path))
@@ -368,31 +382,3 @@ def return_min_len_to_fields(graph, pos, fields):
         print(str(p) + ": " + str(distances[p]))
     #print(shortest_path)
     return min(distances.values())
-
-# return cluster object for pos (agent position), dataset(food) and distance(get_maze_distance())
-def get_cluster_object(pos, dataset, distance, K):
-        M = lambda x1,x2: distance(x1, x2)
-
-        agg_hierarchical_clustering = AgglomerativeHierarchicalClustering(dataset, K, M)
-        agg_hierarchical_clustering.run_algorithm()
-        agg_hierarchical_clustering.print()
-
-        #plt.plot([var[0] for var in dataset], [var[1] for var in dataset], 'ro')
-        #plt.show()
-        #print(len(agg_hierarchical_clustering.clusters.items()))
-        #print(agg_hierarchical_clustering.clusters[0])
-        id = agg_hierarchical_clustering.add_cluster([pos])
-        #print("closest: ")
-        #print(dataset)
-        #print(agg_hierarchical_clustering.data)
-
-        colors = ["b", "c", "g", "k", "m", "r", "y"]
-        markers = ["o", "s"]
-        for i in range(K+1):
-            cluster = agg_hierarchical_clustering.clusters[i]
-            plt.plot([var[0] for var in cluster], [var[1] for var in cluster], colors[i%len(colors)] + markers[i%len(markers)])
-        plt.xlim([0, max([var[0] for var in dataset])+2])
-        plt.ylim([0, max([var[1] for var in dataset])+2])
-        plt.show()
-
-        return agg_hierarchical_clustering
