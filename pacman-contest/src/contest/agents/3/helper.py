@@ -1,6 +1,6 @@
 import copy
 import numpy as np
-from clustering.clustering_algorithm import *
+#from clustering.clustering_algorithm import *
 from matplotlib import pyplot as plt
 
 class Node:
@@ -382,31 +382,3 @@ def return_min_len_to_fields(graph, pos, fields):
         print(str(p) + ": " + str(distances[p]))
     #print(shortest_path)
     return min(distances.values())
-
-# return cluster object for pos (agent position), dataset(food) and distance(get_maze_distance())
-def get_cluster_object(pos, dataset, distance, K):
-        M = lambda x1,x2: distance(x1, x2)
-
-        agg_hierarchical_clustering = AgglomerativeHierarchicalClustering(dataset, K, M)
-        agg_hierarchical_clustering.run_algorithm()
-        agg_hierarchical_clustering.print()
-
-        #plt.plot([var[0] for var in dataset], [var[1] for var in dataset], 'ro')
-        #plt.show()
-        #print(len(agg_hierarchical_clustering.clusters.items()))
-        #print(agg_hierarchical_clustering.clusters[0])
-        id = agg_hierarchical_clustering.add_cluster([pos])
-        #print("closest: ")
-        #print(dataset)
-        #print(agg_hierarchical_clustering.data)
-
-        colors = ["b", "c", "g", "k", "m", "r", "y"]
-        markers = ["o", "s"]
-        for i in range(K+1):
-            cluster = agg_hierarchical_clustering.clusters[i]
-            plt.plot([var[0] for var in cluster], [var[1] for var in cluster], colors[i%len(colors)] + markers[i%len(markers)])
-        plt.xlim([0, max([var[0] for var in dataset])+2])
-        plt.ylim([0, max([var[1] for var in dataset])+2])
-        plt.show()
-
-        return agg_hierarchical_clustering
