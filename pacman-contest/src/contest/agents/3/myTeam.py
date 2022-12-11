@@ -28,7 +28,7 @@ from game import Directions
 from util import nearestPoint
 import time
 
-import helper
+#import helper
 
 
 #################
@@ -65,8 +65,8 @@ class DumbAgent(CaptureAgent):
 
     def register_initial_state(self, game_state):
         # dodaj graf labirinata (za potrebe pasti) - potrebno dobiti samo enkrat
-        layout = str(game_state).split("\n")
-        self.graph = helper.generate_graph_from_layout(layout)
+        #layout = str(game_state).split("\n")
+        #self.graph = helper.generate_graph_from_layout(layout)
 
         self.start = game_state.get_agent_position(self.index)
         CaptureAgent.register_initial_state(self, game_state)
@@ -83,9 +83,9 @@ class DumbAgent(CaptureAgent):
         max_value = max(values)
         best_actions = [action for action, value in zip(actions, values) if value == max_value]
 
-        if type(self) == StarvingPaccy:
-            print([(x, y) for x, y in zip(actions, values)])
-            print("[" + str(max_value) + "]")
+        #if type(self) == StarvingPaccy:
+        #    print([(x, y) for x, y in zip(actions, values)])
+        #    print("[" + str(max_value) + "]")
 
         return random.choice(best_actions)
     
@@ -101,9 +101,9 @@ class DumbAgent(CaptureAgent):
         features = self.get_features(game_state, action)
         weights = self.get_weights(game_state, action)
 
-        print(action)
-        print(features)
-        print(weights)
+        #print(action)
+        #print(features)
+        #print(weights)
 
         return features * weights
 
@@ -129,7 +129,7 @@ class StarvingPaccy(DumbAgent):
             past_position = self.get_previous_observation().get_agent_position(self.index)
 
         # preveri ce je ujet
-        is_trapped = helper.is_trap(self.graph, current_position, my_pos)
+        #is_trapped = helper.is_trap(self.graph, current_position, my_pos)
 
         # pridobi informacije o nasprotniku
         enemies = [successor.get_agent_state(opponent) for opponent in self.get_opponents(successor)]
@@ -181,7 +181,6 @@ class StarvingPaccy(DumbAgent):
                     features['going_home_ghost_danger'] = ghost_approaching
                 #return features # preveri ce je smiselno
 
-            # si na nasprotnikovi polovici
             features['food_path'] = food_path
             features['food_eat'] = abs(len(food_list) - len(food_list_current))
             
@@ -209,9 +208,9 @@ class StarvingPaccy(DumbAgent):
                 
                 # ce v pasti in so duhci blizu -> raje iz pasti, ostalo "pozabi"
                 # ce ni duhcev blizu: ni pomembno
-                if (is_trapped):
-                    features['going_home_ghost_danger'] += 3    # fix that (add new feature)
-                    features['going_home'] += 1                 # fix that (add new feature)
+                #if (is_trapped):
+                #    features['going_home_ghost_danger'] += 3    # fix that (add new feature)
+                #    features['going_home'] += 1                 # fix that (add new feature)
 
                 # ce prazno: nevarnost me ne zanima toliko
                 #if (numCarrying == 0):
@@ -295,6 +294,10 @@ class LittleGhostie(DumbAgent):
     def get_features(self, game_state, action):
         features = util.Counter()
 
+        # da ve koliko hrane nosi
+        agent = game_state.data.agent_states[self.index] # usefull
+        numCarrying = agent.num_carrying
+
         # postavi se na potencialno naslednjo pozicijo
         successor = self.get_successor(game_state, action)
         my_state = successor.get_agent_state(self.index)
@@ -315,6 +318,22 @@ class LittleGhostie(DumbAgent):
 
         my_food = [food for food in self.get_food_you_are_defending(game_state).as_list()]
 
+        food_list = self.get_food(successor).as_list()
+        food_list_current = self.get_food(game_state).as_list()
+        food_left = len(food_list_current)
+        food_list_distances = [self.get_maze_distance(my_pos, food) for food in food_list]
+        food_path = min(food_list_distances)
+
+        layout = game_state.data.layout
+        my_bases = [layout.agentPositions[i][1] for i in self.get_team(successor)]
+        enemy_bases = [layout.agentPositions[i][1] for i in self.get_opponents(successor)]
+
+        # za poiskat pot domov: ugotovis, o kateri koordinati govoris (vzhod-zahod [layout.width] ali sever-jug[layout.height]), 
+        # potem pa isces min distance med sabo in tokami po liniji ob srediscu (width oziroma height) - 1
+    
+        home_base_position = (my_bases[0][0], 0) if my_bases[0][0] == my_bases[1][0] else (0, my_bases[0][1])
+        enemy_base_position = (enemy_bases[0][0], 0) if enemy_bases[0][0] == enemy_bases[1][0] else (0, enemy_bases[0][1])
+
         # preveri, kaj bos delal
         if my_state.is_pacman:
             # si na nasprotnikovi polovici -> ce ti nihce nic ne je, poskusi ti pojest kaj, kar je blizu, a bodi previden
@@ -322,22 +341,81 @@ class LittleGhostie(DumbAgent):
             agent = game_state.data.agent_states[self.index] # usefull
             numCarrying = agent.num_carrying
 
-            # Preveri, ce ti kdo kaj jé
-            if self.get_previous_observation() is not None:
-                
-                past_food = self.get_food_you_are_defending(self.get_previous_observation()).as_list()
-                current_food = self.get_food_you_are_defending(game_state).as_list()
-                missing_food = [food for food in past_food if food not in current_food]
 
-                if len(missing_food) > 0:
-                    # nekdo nekaj je, vrni se domov
-                    missing_food_dist = [self.get_maze_distance(my_pos, food) for food in missing_food]
-                    features['missing_food_distance'] = min(missing_food_dist)
-                
-            enemy_food = self.get_food(game_state).as_list()
-            if len(enemy_food) <= 2 and numCarrying > 0:
-                pass # TODO
-      
+#            if len(enemy_food) <= 2 and numCarrying > 0:
+#                pass # TODO
+
+            time_left = game_state.data.timeleft
+            if home_base_position[0] > 0:
+                dir = 0 if (layout.width - home_base_position[0]) < layout.width/2 else -1
+                distances = [self.get_maze_distance(my_pos, (dir + layout.width/2, i)) for i in range(1, layout.height - 1) if not layout.walls[int(dir + layout.width/2)][i]]
+            else:
+                dir = 0 if (layout.height - home_base_position[1]) < layout.height/2 else -1
+                distances = [self.get_maze_distance((i, dir + layout.width/2), my_pos) for i in range(1, layout.height - 1) if not layout.walls[i][int(dir + layout.width/2)]]
+            dist = min(distances)
+
+            retreat = False if ((time_left / 4 - 20) > dist) else True
+
+            # najprej preveri, ce je nujno domov
+            if food_left <= 2 or retreat:
+                #print("hmm")
+                #dist = self.get_maze_distance(self.start, my_pos)
+                features['going_home'] = dist
+                if len(ghosts) > 0:
+                    ghosts_dist = [self.get_maze_distance(current_position, ghost.get_position()) for ghost in ghosts]
+                    ghosts_current_dist = [self.get_maze_distance(my_pos, ghost.get_position()) for ghost in ghosts]
+                    ghost_approaching = min(ghosts_dist) - min(ghosts_current_dist)
+                    features['going_home_ghost_danger'] = ghost_approaching
+            
+            features['food_path'] = food_path
+            features['food_eat'] = abs(len(food_list) - len(food_list_current))
+
+            if my_state.scared_timer > 5:
+                if numCarrying - len(food_list_current) > 0:
+                    features['going_home'] = dist# * 10
+                if len(ghosts) > 0:
+                    features['going_home'] = dist
+                    if len(ghosts) > 0:
+                        ghosts_dist = [self.get_maze_distance(current_position, ghost.get_position()) for ghost in ghosts]
+
+                        # ce ghost preblizu: ne pobirat - pomembno!!
+                        if (min(ghosts_dist) <= 2):
+                            features.pop('food_eat', None)
+
+                        ghosts_current_dist = [self.get_maze_distance(my_pos, ghost.get_position()) for ghost in ghosts]
+                        ghost_approaching = min(ghosts_dist) - min(ghosts_current_dist)
+                        features['going_home_ghost_danger'] = ghost_approaching
+
+                    # ce v pasti in so duhci blizu -> raje iz pasti, ostalo "pozabi"
+                    # ce ni duhcev blizu: ni pomembno
+                    #if (is_trapped):
+                    #    features['going_home_ghost_danger'] += 3    # fix that (add new feature)
+                    #    features['going_home'] += 1                 # fix that (add new feature)
+
+                    # ce prazno: nevarnost me ne zanima toliko
+                    #if (numCarrying == 0):
+                    #    features['going_home_ghost_danger'] -= 1
+                    #    features['going_home'] -= 1
+                    #    pass
+
+                if 2.5*numCarrying > len(food_list_current):
+                    features['going_home'] = dist   
+
+                if len(pacmans)> 0:
+                    pacmans_distances = [self.get_maze_distance(my_pos, pacman.get_position()) for pacman in pacmans]
+                    minimal_pacman_distance = min(pacmans_distances)
+                    features['pacman_nearby_distance'] = minimal_pacman_distance
+
+            else:
+                # vrni se domov
+                features['going_home'] = dist
+                if len(ghosts) > 0:
+                    ghosts_dist = [self.get_maze_distance(current_position, ghost.get_position()) for ghost in ghosts]
+                    ghosts_current_dist = [self.get_maze_distance(my_pos, ghost.get_position()) for ghost in ghosts]
+                    ghost_approaching = min(ghosts_dist) - min(ghosts_current_dist)
+                    features['going_home_ghost_danger'] = ghost_approaching
+
+
         elif my_state.scared_timer > 0: # 10
             # izogibaj se pacmanov in pojdi cim hitreje na nasprotnikovo polovico
             
@@ -355,7 +433,7 @@ class LittleGhostie(DumbAgent):
                 food_list = self.get_food(successor).as_list()
                 food_list_distances = [self.get_maze_distance(my_pos, food) for food in food_list]
                 food_path = min(food_list_distances)
-                features['food_path'] = food_path
+                features['food_path_scared'] = food_path
         
         else:
             # poglej, ce ti kdo kaj je, pomakni se nekam v sredino, poskusi z blagim napadom
@@ -402,4 +480,10 @@ class LittleGhostie(DumbAgent):
         weights['resting_place_distance'] = -1       # 0, 1, 2, 3, 4 ... | vecje je, slabse je
         weights['stop'] = -100                       # 0, 1 ............ | zavraca neaktivnost
         weights['reverse'] = -2                      # 0, 1 ............ | zavraca vracanje nazaj
+
+        weights['going_home'] = -5                   # 0, 1, 2, 3, 4 ........... | vecje je, dlje je dom (vecje = slabse)    # preveri ce *10
+        weights['going_home_ghost_danger'] = -100    # naceloma 0 ali 1, maybe 2 | vecje je, slabse je                       # preveri ce *10
+        weights['food_eat'] = 100                    # 0, 1 .................... | ali poje hrano s to potezo
+        weights['pacman_nearby_distance'] = -1000    # 0, 1, 2, 3, 4 ........... | vecje je, dlje je pacman (vecje = slabse)
+        weights['food_path_scared'] = -10            # 0, 1, 2, 3, 4 ... | vecje je, dlje je hrana (vecje = slabse)
         return weights
