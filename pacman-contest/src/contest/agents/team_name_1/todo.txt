@@ -2,9 +2,8 @@ class DumbAgent():
     je bolj ali manj končan, tako da ne rabi nič dela.
 
 class StarvingPaccy():
-    - [Naredi, da lahko namensko uporabi token (da prestraši nasprotnika)] - Tomaž
-    - [Naredi opcijo, da preveri, če je nasprotnik scared -> če je, naj ga ali poje ali ignorira] - tomaž - ga ignorira, zgleda ok,
-          (pre)malo testiranj, dodan tudi k LittleGhostie, ko na nasprotnikovi polovici
+    - [Naredi, da lahko namensko uporabi token (da prestraši nasprotnika)] - Tomaž, malo testiranj, še ne optimalno
+    - [Naredi opcijo, da preveri, če je nasprotnik scared -> če je, naj ga ali poje ali ignorira] - tomaž - ga ignorira, zgleda ok
     + [Naredi, da če ima duhca v blizini, naj ne hodi v pasti. Ce je v njej, naj jo poskusi zapustiti.] - Tomaž
     - Naredi, da če ima zasledovalca dovolj daleč, da še zmeraj lahko kaj spotoma poje (naredi to tako,
       da se lahko po potrebi odstrani -> ne vem, kako dobra ideja sploh je to (dobra samo če se striktno izogiba pastem))
@@ -23,6 +22,7 @@ class LittleGhostie():
       ampak tudi čim bližje nasprotnikovi polovici (tako da gre lahko tudi kaj pobrat, če utegne)
     - Poskusi različne načine iskanja uteži, kje naj čaka - uporabi clustering in na podlagi tega poskusi
       najti nek čim boljši način.
+    - na nasprotnikovi polovici izogibanje pastem
     
 
 Poskusi uporabiti čim več njihovih funkcij ... za pozicije, razdalje in podobno je ogromno že narejenega.

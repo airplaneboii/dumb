@@ -143,6 +143,14 @@ class StarvingPaccy(DumbAgent):
         # univerzalna meja na enem mestu
         scared_time_limit = 5
 
+        #print(str(game_state.get_red_capsules()) + ", " + str(game_state.get_blue_capsules()))
+        #print(self.red)
+        capsules = game_state.get_blue_capsules() if self.red else game_state.get_red_capsules()    #print(capsules)
+        # razdalja do najbližje kapsule: -1, če je ni več :)
+        distance_capsule = min([self.get_maze_distance(my_pos, capsule) for capsule in capsules]) if capsules != [] else -1
+        distance_capsule_limit = 5
+        #print(distance_capsule)
+
         food_list = self.get_food(successor).as_list()
         food_list_current = self.get_food(game_state).as_list()
         food_left = len(food_list_current)
@@ -206,11 +214,15 @@ class StarvingPaccy(DumbAgent):
 
             if len(ghosts) > 0:
 
-                # > 5: za rezervo
+                # če ghost blizu (trenutna pozicija), mi pa bližje kapsuli: gremo jo pobrat
+                # predpostavka, da niso blizu kapsule in nih ne vidimo
+                if (capsules != []):
+                    distance_ghosts_capsule = min([self.get_maze_distance(capsules[0], ghost.get_position()) for ghost in ghosts])
+                    if (distance_capsule < distance_capsule_limit and distance_capsule < distance_ghosts_capsule):
+                        features['eat_capsule'] = distance_capsule
+                
                 # prestrašeni: se ne ozira nanje
-                if ghosts_scared_times != [] and max(ghosts_scared_times) > scared_time_limit:
-                    print("Free to eat")
-                else:
+                if not (ghosts_scared_times != [] and max(ghosts_scared_times) > scared_time_limit):
                     features['going_home'] = dist
 
                     ghosts_dist = [self.get_maze_distance(current_position, ghost.get_position()) for ghost in ghosts]
@@ -311,6 +323,7 @@ class StarvingPaccy(DumbAgent):
         weights['going_home_ghost_danger'] = -100  # naceloma 0 ali 1, maybe 2 | vecje je, slabse je                       # preveri ce *10
         weights['drop_food'] = 10000
         weights['is_trapped'] = -200               # 0, 1 .................... | ali se premika v past
+        weights['eat_capsule'] = -10               # treba testirati, koliko potrebno
         #weights['testing'] = 100000
         return weights
 
