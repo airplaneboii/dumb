@@ -28,6 +28,8 @@ from game import Directions
 from util import nearestPoint
 import time
 
+import helper
+
 
 #################
 # Team creation #
@@ -62,6 +64,10 @@ class DumbAgent(CaptureAgent):
         self.start = None
 
     def register_initial_state(self, game_state):
+        # dodaj graf labirinata (za potrebe pasti) - potrebno dobiti samo enkrat
+        layout = str(game_state).split("\n")
+        self.graph = helper.generate_graph_from_layout(layout)
+
         self.start = game_state.get_agent_position(self.index)
         CaptureAgent.register_initial_state(self, game_state)
     
@@ -113,7 +119,6 @@ class StarvingPaccy(DumbAgent):
         successor = self.get_successor(game_state, action)
         my_state = successor.get_agent_state(self.index)
         my_current_state = game_state.get_agent_state(self.index)
-        #print(my_current_state)
 
         # pridobi pozicije
         past_position = None
@@ -122,6 +127,9 @@ class StarvingPaccy(DumbAgent):
 
         if self.get_previous_observation() is not None:
             past_position = self.get_previous_observation().get_agent_position(self.index)
+
+        # preveri ce je ujet
+        is_trapped = helper.is_trap(self.graph, current_position, my_pos)
 
         # pridobi informacije o nasprotniku
         enemies = [successor.get_agent_state(opponent) for opponent in self.get_opponents(successor)]
@@ -171,7 +179,7 @@ class StarvingPaccy(DumbAgent):
                     ghosts_current_dist = [self.get_maze_distance(my_pos, ghost.get_position()) for ghost in ghosts]
                     ghost_approaching = min(ghosts_dist) - min(ghosts_current_dist)
                     features['going_home_ghost_danger'] = ghost_approaching
-                return features # preveri ce je smiselno
+                #return features # preveri ce je smiselno
 
             # si na nasprotnikovi polovici
             features['food_path'] = food_path
@@ -187,16 +195,32 @@ class StarvingPaccy(DumbAgent):
                     features['going_home_ghost_danger'] = ghost_approaching# * 10
 
             if len(ghosts) > 0:
-                #print("danger")
-                #features['ghosts_nearby_distance'] = min([self.get_maze_distance(my_pos, ghost.get_position()) for ghost in ghosts]) # preveri, ali je to potrebno
                 features['going_home'] = dist
                 if len(ghosts) > 0:
-                    #features['testing'] = 1
                     ghosts_dist = [self.get_maze_distance(current_position, ghost.get_position()) for ghost in ghosts]
+
+                    # ce ghost preblizu: ne pobirat - pomembno!!
+                    if (min(ghosts_dist) <= 2):
+                        features.pop('food_eat', None)
+
                     ghosts_current_dist = [self.get_maze_distance(my_pos, ghost.get_position()) for ghost in ghosts]
                     ghost_approaching = min(ghosts_dist) - min(ghosts_current_dist)
                     features['going_home_ghost_danger'] = ghost_approaching
-                #return features
+                
+                # ce v pasti in so duhci blizu -> raje iz pasti, ostalo "pozabi"
+                # ce ni duhcev blizu: ni pomembno
+                if (is_trapped):
+                    features['going_home_ghost_danger'] += 3    # fix that (add new feature)
+                    features['going_home'] += 1                 # fix that (add new feature)
+
+                # ce prazno: nevarnost me ne zanima toliko
+                #if (numCarrying == 0):
+                #    features['going_home_ghost_danger'] -= 1
+                #    features['going_home'] -= 1
+                #    pass
+
+            if 2.5*numCarrying > len(food_list_current):
+                features['going_home'] = dist   
             
             if len(pacmans)> 0:
                 pacmans_distances = [self.get_maze_distance(my_pos, pacman.get_position()) for pacman in pacmans]
@@ -214,13 +238,17 @@ class StarvingPaccy(DumbAgent):
                     future_min = min(pacman_distances_future)
                     current_min = min(pacman_distances_current)
                     diff = future_min - current_min
-                    #print("diff" + str(diff))
                     features['pacman_danger_close'] = diff
-
-            #print("RUNNN")
         
         else:
             pacmanDanger = False if len(ghosts) == 0 else True
+
+            # ce v moji polovici: izogni se duhcu, mogoce najde drugo pot
+            if not my_current_state.is_pacman and pacmanDanger > 0:
+                ghosts_dist = [self.get_maze_distance(current_position, ghost.get_position()) for ghost in ghosts]
+                ghosts_current_dist = [self.get_maze_distance(my_pos, ghost.get_position()) for ghost in ghosts]
+                ghost_approaching = min(ghosts_dist) - min(ghosts_current_dist)
+                features['going_home_ghost_danger'] = ghost_approaching
             
             # Edge case - ce si trenutno pacman in nosis hrano / je v blizini duhec, se umakni na svojo polovico
             if my_current_state.is_pacman and (numCarrying or pacmanDanger) > 0: 
@@ -234,11 +262,11 @@ class StarvingPaccy(DumbAgent):
             
             features['food_path'] = food_path
         
-        # ni dobro če stojiš na mestu
+        # ni dobro ce stojis na mestu
         if action == Directions.STOP:
             features['stop_move'] = 1
 
-        # ni ravno dobro če se vračaš
+        # ni ravno dobro ce se vracas
         rev = Directions.REVERSE[game_state.get_agent_state(self.index).configuration.direction]
         if action == rev:
             features['reverse_move'] = 1
@@ -255,8 +283,8 @@ class StarvingPaccy(DumbAgent):
         weights['pacman_nearby_distance'] = -1000  # 0, 1, 2, 3, 4 ........... | vecje je, dlje je pacman (vecje = slabse)
         weights['stop_move'] = -100                # 0, 1 .................... | zavraca neaktivnost
         weights['reverse_move'] = -2               # 0, 1 .................... | zavraca vracanje nazaj
-        weights['going_home'] = -5                 # 0, 1, 2, 3, 4 ........... | vecje je, dlje je dom (vecje = slabse)
-        weights['going_home_ghost_danger'] = -100  # naceloma 0 ali 1, maybe 2 | vecje je, slabse je
+        weights['going_home'] = -5                 # 0, 1, 2, 3, 4 ........... | vecje je, dlje je dom (vecje = slabse)    # preveri ce *10
+        weights['going_home_ghost_danger'] = -100  # naceloma 0 ali 1, maybe 2 | vecje je, slabse je                       # preveri ce *10
         weights['drop_food'] = 10000
         #weights['testing'] = 100000
         return weights
@@ -290,7 +318,7 @@ class LittleGhostie(DumbAgent):
         # preveri, kaj bos delal
         if my_state.is_pacman:
             # si na nasprotnikovi polovici -> ce ti nihce nic ne je, poskusi ti pojest kaj, kar je blizu, a bodi previden
-            # Popravi ta del, ker še ni v redu (uporabi tudi Tomaževo funkcijo)
+            # Popravi ta del, ker se ni v redu (uporabi tudi Tomazevo funkcijo)
             agent = game_state.data.agent_states[self.index] # usefull
             numCarrying = agent.num_carrying
 
@@ -310,7 +338,7 @@ class LittleGhostie(DumbAgent):
             if len(enemy_food) <= 2 and numCarrying > 0:
                 pass # TODO
       
-        elif my_state.scared_timer > 0:
+        elif my_state.scared_timer > 0: # 10
             # izogibaj se pacmanov in pojdi cim hitreje na nasprotnikovo polovico
             
             if len(pacmans) > 0:
@@ -352,11 +380,11 @@ class LittleGhostie(DumbAgent):
             resting_place_distance = int(sum(my_food_distance)/len(my_food_distance))
             features['resting_place_distance'] = resting_place_distance # spremeni to glede na to ali te ta smer spravi blizje srediscu ali ne
      
-        # ni dobro če stojiš na mestu
+        # ni dobro ce stojis na mestu
         if action == Directions.STOP:
             features['stop'] = 1
 
-        # ni ravno dobro če se vračaš
+        # ni ravno dobro ce se vracas
         rev = Directions.REVERSE[game_state.get_agent_state(self.index).configuration.direction]
         if action == rev:
             features['reverse'] = 1
