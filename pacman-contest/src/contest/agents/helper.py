@@ -200,7 +200,7 @@ class Graph:
 def generate_graph_from_layout(layout):
     nodes = []
     for i in range(1,len(layout)-3):
-        for j in range(1,len(layout[i])-2):
+        for j in range(1,len(layout[i])-1):
             #print(str((i,j)) + " -> " + str((j,len(layout)-i-3)) + ": " + str(layout[i][j]))
             if (layout[i][j] != "%"):
                 nodes.append(Node((j,len(layout)-i-3)))
@@ -343,7 +343,8 @@ def is_trap(graph, curr_position, new_position, barriers=[]):
     graph2.edges[curr_position].pop(new_position, None)
     graph2.edges[new_position].pop(curr_position, None)
     for barrier in barriers:
-        node = graph2.get_node(barrier)
+        #print(barrier)
+        node = graph2.get_nodes()[barrier]
         graph2.get_nodes().remove(node)
     graph2.clean()
     # calculate paths
