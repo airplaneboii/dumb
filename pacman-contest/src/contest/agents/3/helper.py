@@ -343,7 +343,7 @@ def is_trap(graph, curr_position, new_position, barriers=[]):
     graph2.edges[curr_position].pop(new_position, None)
     graph2.edges[new_position].pop(curr_position, None)
     for barrier in barriers:
-        node = graph2.get_node(barrier)
+        node = graph2.get_nodes()[barrier]
         graph2.get_nodes().remove(node)
     graph2.clean()
     # calculate paths
