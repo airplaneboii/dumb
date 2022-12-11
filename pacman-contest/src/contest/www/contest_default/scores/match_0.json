@@ -4,9 +4,9 @@
             "Red",
             "Blue",
             "layouts\\defaultCapture.lay",
-            6,
+            4,
             "Red",
-            154.0,
+            89.0,
             0
         ]
     ],
@@ -31,7 +31,7 @@
             0,
             0,
             0,
-            6
+            4
         ]
     }
 }

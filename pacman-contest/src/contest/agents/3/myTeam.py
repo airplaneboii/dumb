@@ -28,7 +28,11 @@ from game import Directions
 from util import nearestPoint
 import time
 
-#import helper
+import os, sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+import helper
+
 
 
 #################
@@ -65,8 +69,8 @@ class DumbAgent(CaptureAgent):
 
     def register_initial_state(self, game_state):
         # dodaj graf labirinata (za potrebe pasti) - potrebno dobiti samo enkrat
-        #layout = str(game_state).split("\n")
-        #self.graph = helper.generate_graph_from_layout(layout)
+        layout = str(game_state).split("\n")
+        self.graph = helper.generate_graph_from_layout(layout)
 
         self.start = game_state.get_agent_position(self.index)
         CaptureAgent.register_initial_state(self, game_state)
@@ -179,6 +183,10 @@ class StarvingPaccy(DumbAgent):
                     ghosts_current_dist = [self.get_maze_distance(my_pos, ghost.get_position()) for ghost in ghosts]
                     ghost_approaching = min(ghosts_dist) - min(ghosts_current_dist)
                     features['going_home_ghost_danger'] = ghost_approaching
+
+                    is_trapped = helper.is_trap(self.graph, current_position, my_pos, ghosts_current_dist)
+                    if is_trapped:
+                        features['is_trapped'] = 1
                 #return features # preveri ce je smiselno
 
             features['food_path'] = food_path
@@ -205,7 +213,13 @@ class StarvingPaccy(DumbAgent):
                 ghosts_current_dist = [self.get_maze_distance(my_pos, ghost.get_position()) for ghost in ghosts]
                 ghost_approaching = min(ghosts_dist) - min(ghosts_current_dist)
                 features['going_home_ghost_danger'] = ghost_approaching
-                
+
+                # prioriteta: ozogni se pasti
+                    # ali gre v past (relevantno, če duhci v bližini)
+                is_trapped = helper.is_trap(self.graph, current_position, my_pos, ghosts_current_dist)
+                if is_trapped:
+                    features['is_trapped'] = 1
+            
                 # ce v pasti in so duhci blizu -> raje iz pasti, ostalo "pozabi"
                 # ce ni duhcev blizu: ni pomembno
                 #if (is_trapped):
@@ -285,6 +299,7 @@ class StarvingPaccy(DumbAgent):
         weights['going_home'] = -5                 # 0, 1, 2, 3, 4 ........... | vecje je, dlje je dom (vecje = slabse)    # preveri ce *10
         weights['going_home_ghost_danger'] = -100  # naceloma 0 ali 1, maybe 2 | vecje je, slabse je                       # preveri ce *10
         weights['drop_food'] = 10000
+        weights['is_trapped'] = -200               # 0, 1 .................... | ali se premika v past
         #weights['testing'] = 100000
         return weights
 
