@@ -249,11 +249,9 @@ class StarvingPaccy(DumbAgent):
                     # ali gre v past (relevantno, če duhci v bližini)
                     is_trapped = helper.is_trap(self.graph, current_position, my_pos, ghosts_current_dist)
                     if is_trapped:
-                        print("trap")
-                        features.pop('going_home_ghost_danger', None)
                         features['is_trapped'] = 1
             
-            if 2*numCarrying >= len(food_list_current):
+            if 2.5*numCarrying > len(food_list_current):
                 features['going_home'] = dist   
             
             if len(pacmans)> 0:
@@ -315,15 +313,15 @@ class StarvingPaccy(DumbAgent):
     
     def get_weights(self, game_state, action):
         weights = util.Counter()
-        weights['food_path'] = -2                  # 0, 1, 2, 3, 4 ........... | vecje je, dlje je hrana (vecje = slabse)
+        weights['food_path'] = -1                  # 0, 1, 2, 3, 4 ........... | vecje je, dlje je hrana (vecje = slabse)
         weights['food_eat'] = 100                  # 0, 1 .................... | ali poje hrano s to potezo
         weights['ghosts_nearby_distance'] = 10     # 0, 1, 2, 3, 4 ........... | vecje je, dlje je duhec (vecje = boljse)
         weights['pacman_danger_close'] = 40        # naceloma 0 ali 1, maybe 2 | vecje je, boljse je
-        weights['pacman_nearby_distance'] = -800   # 0, 1, 2, 3, 4 ........... | vecje je, dlje je pacman (vecje = slabse)
-        weights['stop_move'] = -500                # 0, 1 .................... | zavraca neaktivnost
-        weights['reverse_move'] = -1               # 0, 1 .................... | zavraca vracanje nazaj
-        weights['going_home'] = -8                 # 0, 1, 2, 3, 4 ........... | vecje je, dlje je dom (vecje = slabse)    # preveri ce *10
-        weights['going_home_ghost_danger'] = -120  # naceloma 0 ali 1, maybe 2 | vecje je, slabse je                       # preveri ce *10
+        weights['pacman_nearby_distance'] = -1000  # 0, 1, 2, 3, 4 ........... | vecje je, dlje je pacman (vecje = slabse)
+        weights['stop_move'] = -100                # 0, 1 .................... | zavraca neaktivnost
+        weights['reverse_move'] = -2               # 0, 1 .................... | zavraca vracanje nazaj
+        weights['going_home'] = -5                 # 0, 1, 2, 3, 4 ........... | vecje je, dlje je dom (vecje = slabse)    # preveri ce *10
+        weights['going_home_ghost_danger'] = -100  # naceloma 0 ali 1, maybe 2 | vecje je, slabse je                       # preveri ce *10
         weights['drop_food'] = 10000
         weights['is_trapped'] = -200               # 0, 1 .................... | ali je ujet                               # ali se premika v past
         weights['eat_capsule'] = -100              # 0, 1, 2, 3, 4 ........... | vecje je, slabse je                       # treba testirati, koliko potrebno
@@ -526,15 +524,15 @@ class LittleGhostie(DumbAgent):
             resting_place_distance = int(sum(my_food_distance)/len(my_food_distance))
             features['resting_place_distance'] = resting_place_distance # spremeni to glede na to ali te ta smer spravi blizje srediscu ali ne
 
-            #base_dist_random = random.randint(1, 3)
-            #if home_base_position[0] > 0:
-            #    middle_dir = 0 if (layout.width - home_base_position[0]) < layout.width/2 else -1
-            #    middle_distances = [self.get_maze_distance(my_pos, (middle_dir + layout.width/2, i)) for i in range(1, layout.height - base_dist_random) if not layout.walls[int(middle_dir + layout.width/2)][i]]
-            #else:
-            #    middle_dir = 0 if (layout.height - home_base_position[1]) < layout.height/2 else -1
-            #    middle_distances = [self.get_maze_distance((i, middle_dir + layout.width/2), my_pos) for i in range(1, layout.width - base_dist_random) if not layout.walls[i][int(middle_dir + layout.width/2)]]
-            #min_middle_dir = min(middle_distances)
-            #features['resting_place_distance_random'] = min_middle_dir
+            base_dist_random = random.randint(1, 3)
+            if home_base_position[0] > 0:
+                middle_dir = 0 if (layout.width - home_base_position[0]) < layout.width/2 else -1
+                middle_distances = [self.get_maze_distance(my_pos, (middle_dir + layout.width/2, i)) for i in range(1, layout.height - base_dist_random) if not layout.walls[int(middle_dir + layout.width/2)][i]]
+            else:
+                middle_dir = 0 if (layout.height - home_base_position[1]) < layout.height/2 else -1
+                middle_distances = [self.get_maze_distance((i, middle_dir + layout.width/2), my_pos) for i in range(1, layout.width - base_dist_random) if not layout.walls[i][int(middle_dir + layout.width/2)]]
+            min_middle_dir = min(middle_distances)
+            features['resting_place_distance_random'] = min_middle_dir
 
      
         # ni dobro ce stojis na mestu
@@ -551,13 +549,13 @@ class LittleGhostie(DumbAgent):
 
     def get_weights(self, game_state, action):
         weights = util.Counter()
-        weights['scared_avoiding_pacman'] = 120          # 0, 1 ............ | 1 if scared in v blizini pacmana else 0 (vecje = boljse)
-        weights['food_path'] = -2                        # 0, 1, 2, 3, 4 ... | vecje je, dlje je hrana (vecje = slabse)
+        weights['scared_avoiding_pacman'] = 120          # 0, 1 ............ | 1 if scared in v blizini pacmana else 0
+        weights['food_path'] = -1                        # 0, 1, 2, 3, 4 ... | vecje je, dlje je hrana (vecje = slabse)
         weights['missing_food'] = -100                   # 0, 1, 2, 3, 4 ... | vecje je, dlje se slabo dogaja (vecje = slabse)
         weights['minimal_pacman_distance'] = -1000       # 0, 1, 2, 3, 4 ... | vecje je, slabse je
-        weights['resting_place_distance'] = -2           # 0, 1, 2, 3, 4 ... | vecje je, slabse je
-        weights['stop'] = -210                           # 0, 1 ............ | zavraca neaktivnost
-        weights['reverse'] = -1                          # 0, 1 ............ | zavraca vracanje nazaj
+        weights['resting_place_distance'] = -5           # 0, 1, 2, 3, 4 ... | vecje je, slabse je
+        weights['stop'] = -100                           # 0, 1 ............ | zavraca neaktivnost
+        weights['reverse'] = -2                          # 0, 1 ............ | zavraca vracanje nazaj
 
         weights['going_home'] = -10                      # 0, 1, 2, 3, 4 ........... | vecje je, dlje je dom (vecje = slabse)    # preveri ce *10
         weights['going_home_ghost_danger'] = -120        # naceloma 0 ali 1, maybe 2 | vecje je, slabse je                       # preveri ce *10
