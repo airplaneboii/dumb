@@ -145,7 +145,7 @@ class StarvingPaccy(DumbAgent):
         scared_time_limit = 5
 
         capsules = game_state.get_blue_capsules() if self.red else game_state.get_red_capsules()
-        distance_capsule = min([self.get_maze_distance(my_pos, capsule) for capsule in capsules]) if capsules != [] else -1
+        distance_capsule = min([self.get_maze_distance(my_pos, capsule) for capsule in capsules]) if capsules != [] else 0
         distance_capsule_limit = 5
 
         food_list = self.get_food(successor).as_list()
@@ -187,6 +187,9 @@ class StarvingPaccy(DumbAgent):
                 #dist = self.get_maze_distance(self.start, my_pos)
                 features['going_home'] = dist
                 if len(ghosts) > 0:
+
+                    features['ghosts_nearby_distance'] = min([self.get_maze_distance(my_pos, ghost.get_position()) for ghost in ghosts]) # check this
+
                     ghosts_dist = [self.get_maze_distance(current_position, ghost.get_position()) for ghost in ghosts]
                     ghosts_current_dist = [self.get_maze_distance(my_pos, ghost.get_position()) for ghost in ghosts]
                     ghost_approaching = min(ghosts_dist) - min(ghosts_current_dist)
@@ -204,6 +207,9 @@ class StarvingPaccy(DumbAgent):
             if numCarrying - len(food_list_current) > 0:
                 features['going_home'] = dist# * 10
                 if len(ghosts) > 0 and ghosts_scared_times != [] and max(ghosts_scared_times) > scared_time_limit:
+
+                    features['ghosts_nearby_distance'] = min([self.get_maze_distance(my_pos, ghost.get_position()) for ghost in ghosts]) # check this
+
                     ghosts_dist = [self.get_maze_distance(current_position, ghost.get_position()) for ghost in ghosts]
                     ghosts_current_dist = [self.get_maze_distance(my_pos, ghost.get_position()) for ghost in ghosts]
                     ghost_approaching = min(ghosts_dist) - min(ghosts_current_dist)
@@ -220,7 +226,13 @@ class StarvingPaccy(DumbAgent):
                     if (distance_capsule < distance_capsule_limit and distance_capsule < distance_ghosts_capsule):
                         features['eat_capsule'] = distance_capsule                
 
-                if not (ghosts_scared_times != [] and max(ghosts_scared_times) > scared_time_limit):
+                if (ghosts_scared_times != [] and max(ghosts_scared_times) > scared_time_limit):
+                    pass
+                else:
+                    # Tu se izogiba duhcom
+
+                    features['ghosts_nearby_distance'] = min([self.get_maze_distance(my_pos, ghost.get_position()) for ghost in ghosts]) # check this
+
                     features['going_home'] = dist
 
                     ghosts_dist = [self.get_maze_distance(current_position, ghost.get_position()) for ghost in ghosts]
@@ -234,23 +246,11 @@ class StarvingPaccy(DumbAgent):
                     features['going_home_ghost_danger'] = ghost_approaching
 
                     # prioriteta: ozogni se pasti
-                        # ali gre v past (relevantno, če duhci v bližini)
+                    # ali gre v past (relevantno, če duhci v bližini)
                     is_trapped = helper.is_trap(self.graph, current_position, my_pos, ghosts_current_dist)
                     if is_trapped:
                         features['is_trapped'] = 1
             
-                # ce v pasti in so duhci blizu -> raje iz pasti, ostalo "pozabi"
-                # ce ni duhcev blizu: ni pomembno
-                #if (is_trapped):
-                #    features['going_home_ghost_danger'] += 3    # fix that (add new feature)
-                #    features['going_home'] += 1                 # fix that (add new feature)
-
-                # ce prazno: nevarnost me ne zanima toliko
-                #if (numCarrying == 0):
-                #    features['going_home_ghost_danger'] -= 1
-                #    features['going_home'] -= 1
-                #    pass
-
             if 2.5*numCarrying > len(food_list_current):
                 features['going_home'] = dist   
             
@@ -325,8 +325,24 @@ class StarvingPaccy(DumbAgent):
         weights['drop_food'] = 10000
         weights['is_trapped'] = -200               # 0, 1 .................... | ali je ujet                               # ali se premika v past
         weights['eat_capsule'] = -100              # 0, 1, 2, 3, 4 ........... | vecje je, slabse je                       # treba testirati, koliko potrebno
-        weights['food_path_scared'] = 0              # 0, 1, 2, 3, 4 .......... | vecje je, slabse je
-        weights['food_path_scared'] = 0              # naceloma 0 ali 1, maybe 2 | vecje je, bolje je
+        weights['food_path_scared'] = -10          # 0, 1, 2, 3, 4 ........... | vecje je, slabse je
+        
+        
+        # backup
+#        weights = util.Counter()
+#        weights['food_path'] = -1                  # 0, 1, 2, 3, 4 ........... | vecje je, dlje je hrana (vecje = slabse)
+#        weights['food_eat'] = 100                  # 0, 1 .................... | ali poje hrano s to potezo
+#        weights['ghosts_nearby_distance'] = 10     # 0, 1, 2, 3, 4 ........... | vecje je, dlje je duhec (vecje = boljse)
+#        weights['pacman_danger_close'] = 40        # naceloma 0 ali 1, maybe 2 | vecje je, boljse je
+#        weights['pacman_nearby_distance'] = -1000  # 0, 1, 2, 3, 4 ........... | vecje je, dlje je pacman (vecje = slabse)
+#        weights['stop_move'] = -100                # 0, 1 .................... | zavraca neaktivnost
+#        weights['reverse_move'] = -2               # 0, 1 .................... | zavraca vracanje nazaj
+#        weights['going_home'] = -5                 # 0, 1, 2, 3, 4 ........... | vecje je, dlje je dom (vecje = slabse)    # preveri ce *10
+#        weights['going_home_ghost_danger'] = -100  # naceloma 0 ali 1, maybe 2 | vecje je, slabse je                       # preveri ce *10
+#        weights['drop_food'] = 10000
+#        weights['is_trapped'] = -200               # 0, 1 .................... | ali je ujet                               # ali se premika v past
+#        weights['eat_capsule'] = -100              # 0, 1, 2, 3, 4 ........... | vecje je, slabse je                       # treba testirati, koliko potrebno
+#        weights['food_path_scared'] = -10          # 0, 1, 2, 3, 4 ........... | vecje je, slabse je
         return weights
 
 
@@ -362,7 +378,7 @@ class LittleGhostie(DumbAgent):
         scared_time_limit = 5
 
         capsules = game_state.get_blue_capsules() if self.red else game_state.get_red_capsules()
-        distance_capsule = min([self.get_maze_distance(my_pos, capsule) for capsule in capsules]) if capsules != [] else -1
+        distance_capsule = min([self.get_maze_distance(my_pos, capsule) for capsule in capsules]) if capsules != [] else 0
         distance_capsule_limit = 5
 
         my_food = [food for food in self.get_food_you_are_defending(game_state).as_list()]
@@ -448,28 +464,6 @@ class LittleGhostie(DumbAgent):
                         is_trapped = helper.is_trap(self.graph, current_position, my_pos, ghosts_current_dist)
                         if is_trapped:
                             features['is_trapped'] = 1
-#                    features['going_home'] = dist
-#                    ghosts_dist = [self.get_maze_distance(current_position, ghost.get_position()) for ghost in ghosts]
-#
-#                    # ce ghost preblizu: ne pobirat - pomembno!!
-#                    if (min(ghosts_dist) <= 2):
-#                        features.pop('food_eat', None)
-#
-#                    ghosts_current_dist = [self.get_maze_distance(my_pos, ghost.get_position()) for ghost in ghosts]
-#                    ghost_approaching = min(ghosts_dist) - min(ghosts_current_dist)
-#                    features['going_home_ghost_danger'] = ghost_approaching
-
-                    # ce v pasti in so duhci blizu -> raje iz pasti, ostalo "pozabi"
-                    # ce ni duhcev blizu: ni pomembno
-                    #if (is_trapped):
-                    #    features['going_home_ghost_danger'] += 3    # fix that (add new feature)
-                    #    features['going_home'] += 1                 # fix that (add new feature)
-
-                    # ce prazno: nevarnost me ne zanima toliko
-                    #if (numCarrying == 0):
-                    #    features['going_home_ghost_danger'] -= 1
-                    #    features['going_home'] -= 1
-                    #    pass
 
                 if 2.5*numCarrying > len(food_list_current):
                     features['going_home'] = dist   
@@ -545,10 +539,9 @@ class LittleGhostie(DumbAgent):
 
     def get_weights(self, game_state, action):
         weights = util.Counter()
-        weights['missing_food_distance'] = -5        # 0, 1, 2, 3, 4 ... | vecje je, dlje se slabo dogaja (vecje = slabse) (ko je pacman)
         weights['scared_avoiding_pacman'] = 120      # 0, 1 ............ | 1 if scared in v blizini pacmana else 0
         weights['food_path'] = -1                    # 0, 1, 2, 3, 4 ... | vecje je, dlje je hrana (vecje = slabse)
-        weights['missing_food'] = -100               # 0, 1, 2, 3, 4 ... | vecje je, dlje se slabo dogaja (vecje = slabse) (isto kot missing_food_distance, samo da je tokrat kot ghost)
+        weights['missing_food'] = -100               # 0, 1, 2, 3, 4 ... | vecje je, dlje se slabo dogaja (vecje = slabse)
         weights['minimal_pacman_distance'] = -1000   # 0, 1, 2, 3, 4 ... | vecje je, slabse je
         weights['resting_place_distance'] = -1       # 0, 1, 2, 3, 4 ... | vecje je, slabse je
         weights['stop'] = -100                       # 0, 1 ............ | zavraca neaktivnost
@@ -558,7 +551,9 @@ class LittleGhostie(DumbAgent):
         weights['going_home_ghost_danger'] = -120    # naceloma 0 ali 1, maybe 2 | vecje je, slabse je                       # preveri ce *10
         weights['food_eat'] = 100                    # 0, 1 .................... | ali poje hrano s to potezo
         weights['pacman_nearby_distance'] = -1010    # 0, 1, 2, 3, 4 ........... | vecje je, dlje je pacman (vecje = slabse)
-        weights['food_path_scared'] = -20            # 0, 1, 2, 3, 4 ... | vecje je, dlje je hrana (vecje = slabse)
+        weights['food_path_scared'] = -20            # 0, 1, 2, 3, 4 ........... | vecje je, dlje je hrana (vecje = slabse)
+        weights['is_trapped'] = -200                 # 0, 1 .................... | ali je ujet
+        weights['eat_capsule'] = -100                # 0, 1, 2, 3, 4 ........... | vecje je, slabse je
 
 
         # backup
