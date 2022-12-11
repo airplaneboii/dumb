@@ -195,16 +195,16 @@ class StarvingPaccy(DumbAgent):
 
             if len(ghosts) > 0:
                 features['going_home'] = dist
-                if len(ghosts) > 0:
-                    ghosts_dist = [self.get_maze_distance(current_position, ghost.get_position()) for ghost in ghosts]
+
+                ghosts_dist = [self.get_maze_distance(current_position, ghost.get_position()) for ghost in ghosts]
 
                     # ce ghost preblizu: ne pobirat - pomembno!!
-                    if (min(ghosts_dist) <= 2):
-                        features.pop('food_eat', None)
+                if (min(ghosts_dist) <= 2):
+                    features.pop('food_eat', None)
 
-                    ghosts_current_dist = [self.get_maze_distance(my_pos, ghost.get_position()) for ghost in ghosts]
-                    ghost_approaching = min(ghosts_dist) - min(ghosts_current_dist)
-                    features['going_home_ghost_danger'] = ghost_approaching
+                ghosts_current_dist = [self.get_maze_distance(my_pos, ghost.get_position()) for ghost in ghosts]
+                ghost_approaching = min(ghosts_dist) - min(ghosts_current_dist)
+                features['going_home_ghost_danger'] = ghost_approaching
                 
                 # ce v pasti in so duhci blizu -> raje iz pasti, ostalo "pozabi"
                 # ce ni duhcev blizu: ni pomembno
@@ -375,16 +375,15 @@ class LittleGhostie(DumbAgent):
                     features['going_home'] = dist# * 10
                 if len(ghosts) > 0:
                     features['going_home'] = dist
-                    if len(ghosts) > 0:
-                        ghosts_dist = [self.get_maze_distance(current_position, ghost.get_position()) for ghost in ghosts]
+                    ghosts_dist = [self.get_maze_distance(current_position, ghost.get_position()) for ghost in ghosts]
 
-                        # ce ghost preblizu: ne pobirat - pomembno!!
-                        if (min(ghosts_dist) <= 2):
-                            features.pop('food_eat', None)
+                    # ce ghost preblizu: ne pobirat - pomembno!!
+                    if (min(ghosts_dist) <= 2):
+                        features.pop('food_eat', None)
 
-                        ghosts_current_dist = [self.get_maze_distance(my_pos, ghost.get_position()) for ghost in ghosts]
-                        ghost_approaching = min(ghosts_dist) - min(ghosts_current_dist)
-                        features['going_home_ghost_danger'] = ghost_approaching
+                    ghosts_current_dist = [self.get_maze_distance(my_pos, ghost.get_position()) for ghost in ghosts]
+                    ghost_approaching = min(ghosts_dist) - min(ghosts_current_dist)
+                    features['going_home_ghost_danger'] = ghost_approaching
 
                     # ce v pasti in so duhci blizu -> raje iz pasti, ostalo "pozabi"
                     # ce ni duhcev blizu: ni pomembno
