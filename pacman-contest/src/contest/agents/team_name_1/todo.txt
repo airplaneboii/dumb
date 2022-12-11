@@ -32,3 +32,5 @@ Po potrebi posodabljaj ta file.
 
 Ko bodo zgornje faze narejene, je čas za testiranje - prekopiraj kodo v več agentov, potem pa naj tekmujejo med sabo.
 Opazuj dobre in slabe lastnosti ter prilagajaj uteži.
+
+Kljub nekaterim izboljšavam, v nekaterih situacijah slabše kot prej ...

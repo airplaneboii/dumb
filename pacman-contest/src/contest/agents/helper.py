@@ -336,11 +336,16 @@ def dijkstra_algorithm(graph, start_node):
 # returns whether movement in certain direction traps agent
 # assuming curr_position and new_position are neighboring and
 # movement from curr_position to new_position
-def is_trap(graph, curr_position, new_position):
+# barriers: dodane ovire (npr. duhec na poti)
+def is_trap(graph, curr_position, new_position, barriers=[]):
     graph2 = graph.get_copy()
     # delete edge
     graph2.edges[curr_position].pop(new_position, None)
     graph2.edges[new_position].pop(curr_position, None)
+    for barrier in barriers:
+        node = graph2.get_node(barrier)
+        graph2.get_nodes().remove(node)
+    graph2.clean()
     # calculate paths
     previous_nodes, shortest_path = dijkstra_algorithm(graph2, new_position)
     #print((shortest_path))
