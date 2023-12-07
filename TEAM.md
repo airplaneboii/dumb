@@ -1,19 +1,14 @@
 # Team Information
 
-**Course:** _[fill your course code and name]_
+**Course:** _IŠRM_
 
-**Semester:** Semester 2, 2020
+**Semester:** Semester 1, 2023
 
-**Instructor:** _[name of your instructor]_
+**Instructor:** _Zoran Bosnić_
 
-**Team name:** _[replace this with team name in plan text]_
+**Team name:** _π[-1]_
 
 **Team members:**
 
-* Student 1's Student number - Full Name - Student email - Student Github id
-* Student 2's Student number - Full Name - Student email - Student Github id
-* Student 3's Student number - Full Name - Student email - Student Github id
-
-Replace the lines above with the correct details of members. Delete or add lines as needed.
-
-Student numbers should just be the **numbers**.
+* 63200038 - Domen Vogrin - dv0158@student.uni-lj.si - 88340299
+* 27232051 - Tomaž Poljanšek - tp0992@student.uni-lj.si - 71287697
